@@ -16,12 +16,19 @@ update_cwl.py — 从 structure.sty 自动提取数学符号，更新 TeXStudio 
 
 改动 structure.sty 的符号后，运行本脚本即可同步；TeXStudio 重启后生效。
 """
+import os
 import re
 import sys
 import pathlib
 
-STRUCTURE = r"D:\模板目录\Article-Writing\structure.sty"
-DEFAULT_CWL = r"%APPDATA%\texstudio\completion\user\custom.cwl"
+SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
+
+# 符号来源：默认取脚本同目录的 structure.sty（自包含，不依赖本机路径）
+STRUCTURE = SCRIPT_DIR / "structure.sty"
+
+# TeXStudio 补全文件位置：按 %APPDATA% 推导，避免写死本机用户名
+_APPDATA = os.environ.get("APPDATA") or (pathlib.Path.home() / "AppData" / "Roaming")
+DEFAULT_CWL = pathlib.Path(_APPDATA) / "texstudio" / "completion" / "user" / "custom.cwl"
 
 # 只匹配 \newcommand 与 \renewcommand，命令名由字母组成（含 @）
 CMD_RE = re.compile(r"\\(?:re)?newcommand\{\\([A-Za-z@]+)\}")
