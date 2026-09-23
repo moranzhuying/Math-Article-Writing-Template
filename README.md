@@ -1,6 +1,6 @@
-# Math-Note-Template-By-Yukina (ctexart 版)
+# Math-Article-Writing-Template
 
-一个面向数学文章与短文写作的 LaTeX 模板，基于 `ctexart` 构建，内置统一的定理环境体系、数学符号库与交换图支持。它是 [Math-Note-Template-By-Yukina](https://github.com/moranzhuying/Math-Note-Template-By-Yukina)（`ctexbook` 版）的 article 简化版：面向单篇文章、讲义、短文等较短文档，不设独立习题集，但保留习题/解答环境供正文内嵌使用。
+一个面向数学文章与短文写作的 LaTeX 模板，基于 `ctexart` 构建，内置统一的定理环境体系、数学符号库与交换图支持。它是 [Math-Note-Template](https://github.com/moranzhuying/Math-Note-Template)（`ctexbook` 版）的 article 简化版：面向单篇文章、讲义、短文等较短文档，不设独立习题集，但保留习题/解答环境供正文内嵌使用。
 
 ## 目录结构
 
