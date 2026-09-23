@@ -1,0 +1,81 @@
+\subsubsection{测试段二}
+
+本节演示定理环境,习题环境与数学公式的引用.
+
+\begin{definition}{测试定义}{def:test}
+    这是一个测试用的定义.
+\end{definition}
+
+\begin{theorem}{测试定理}{thm:test}
+    这是一个测试用的定理.
+\end{theorem}
+
+\begin{lemma}{测试引理}{lem:test}
+    这是测试用的引理.
+\end{lemma}
+
+\begin{proposition}{测试命题}{prop:test}
+    这是测试用的命题.
+\end{proposition}
+
+\begin{corollary}{测试推论}{cor:test}
+    这是测试用的推论.
+\end{corollary}
+
+\begin{remark}{测试注记}{rem:test}
+    这是测试用的注记.
+\end{remark}
+
+\begin{example}{测试例}{ex:test}
+    这是测试用的例子.
+\end{example}
+
+\begin{proof}
+    见 \autoref{thm:test} 的证明.
+\end{proof}
+
+定理类引用测试:\autoref{def:test},\autoref{thm:test},\autoref{lem:test},\autoref{prop:test},\autoref{cor:test},\autoref{rem:test},\autoref{ex:test}.
+
+\medskip
+
+下面测试公式环境.
+
+\begin{equation}\label{eq:test-1}
+    E = mc^2
+\end{equation}
+
+\begin{align}
+    (a+b)^2 &= a^2 + 2ab + b^2 \\
+    (a-b)^2 &= a^2 - 2ab + b^2
+    \label{eq:test-2}
+\end{align}
+
+\begin{gather}
+    x + y = z \\
+    \int_0^1 f(x)\,\mathrm{d}x = 1
+    \label{eq:test-3}
+\end{gather}
+
+公式引用测试:\eqref{eq:test-1},\eqref{eq:test-2},\eqref{eq:test-3}.
+
+\medskip
+
+下面测试习题与解答环境(题后即答,解答紧随其后).
+
+\begin{exercise}{测试习题一}{exr:test-1}
+    设 $A$ 为 $n$ 阶方阵,证明 $\tr(A^{\mathsf T}) = \tr(A)$.
+\end{exercise}
+
+\begin{solution}
+    转置保持对角元素不变,故迹相等.
+\end{solution}
+
+\begin{exercise}{测试习题二}{exr:test-2}
+    求极限 $\displaystyle\lim_{x\to 0}\frac{\sin x}{x}$.
+\end{exercise}
+
+\begin{solution}
+    由重要极限知其值为 $1$.
+\end{solution}
+
+习题引用测试:\autoref{exr:test-1},\autoref{exr:test-2}.

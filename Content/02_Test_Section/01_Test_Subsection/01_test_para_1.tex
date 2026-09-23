@@ -1,0 +1,58 @@
+\subsubsection{测试段一}
+
+本节测试公式进阶环境.
+
+\begin{multline}
+    f(x) = (a+b+c+d+e+f)^2 = a^2 + b^2 + c^2 + d^2 + e^2 + f^2 \\
+    + 2ab + 2ac + 2ad + 2ae + 2af + 2bc + 2bd + 2be + 2bf
+    \label{eq:multline-1}
+\end{multline}
+
+分段函数:
+\begin{equation}
+    |x| =
+    \begin{cases}
+        x, & x \geq 0, \\
+        -x, & x < 0.
+    \end{cases}
+    \label{eq:cases-1}
+\end{equation}
+
+矩阵:
+\begin{equation}
+    A = \begin{pmatrix}
+        a & b \\
+        c & d
+    \end{pmatrix},
+    \quad
+    B = \begin{bmatrix}
+        1 & 2 & 3 \\
+        4 & 5 & 6
+    \end{bmatrix}
+    \label{eq:matrix-1}
+\end{equation}
+
+对齐块:
+\begin{equation}
+    \begin{aligned}
+        (a+b)^2 &= a^2 + 2ab + b^2, \\
+        (a-b)^2 &= a^2 - 2ab + b^2.
+    \end{aligned}
+    \label{eq:aligned-1}
+\end{equation}
+
+子编号公式:
+\begin{subequations}
+    \begin{align}
+        x &= y + z, \label{eq:sub-1} \\
+        y &= z + w. \label{eq:sub-2}
+    \end{align}
+\end{subequations}
+
+自定义标签:
+\begin{equation}
+    \pi \approx 3.14159 \tag{$\ast$}
+    \label{eq:tag-1}
+\end{equation}
+
+公式引用测试: \eqref{eq:multline-1}, \eqref{eq:cases-1}, \eqref{eq:matrix-1}, \eqref{eq:aligned-1}, \eqref{eq:sub-1}, \eqref{eq:sub-2}, \eqref{eq:tag-1}.

@@ -1,0 +1,60 @@
+\subsubsection{测试段一}
+
+下面测试表格插入与引用(如表~\ref{tab:test}).
+
+\begin{table}[htbp]
+    \centering
+    \caption{一张测试表格}
+    \label{tab:test}
+    \begin{tabular}{ccc}
+        \hline
+        列1 & 列2 & 列3 \\
+        \hline
+        A & B & C \\
+        D & E & F \\
+        \hline
+    \end{tabular}
+\end{table}
+
+表格引用测试:\ref{tab:test},\autoref{tab:test},\cref{tab:test}.
+
+\medskip
+
+下面测试多列合并表格(\ref{tab:multi}).
+
+\begin{table}[htbp]
+    \centering
+    \caption{多列合并表格}
+    \label{tab:multi}
+    \begin{tabular}{lccc}
+        \hline
+        \multicolumn{4}{c}{总标题} \\
+        \hline
+        行 & 列1 & 列2 & 列3 \\
+        \hline
+        1 & A & B & C \\
+        2 & D & E & F \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\medskip
+
+下面测试含数学公式的表格(\ref{tab:math}).
+
+\begin{table}[htbp]
+    \centering
+    \caption{含数学公式的表格}
+    \label{tab:math}
+    \begin{tabular}{cl}
+        \hline
+        记号 & 含义 \\
+        \hline
+        $\N$ & 自然数集 \\
+        $\Z$ & 整数集 \\
+        $\R$ & 实数集 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+跨环境引用汇总测试:\autoref{fig:test-pic},\autoref{tab:test},\autoref{thm:test},\eqref{eq:test-1}.
