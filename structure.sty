@@ -378,6 +378,25 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \crefname{convention}{约定}{约定}
 \crefname{alarm}{警示}{警示}
 
+% 与上表同名的首字母大写形式（\Cref）；缺了这段 \Cref 会退回英文名
+\Crefname{definition}{定义}{定义}
+\Crefname{axiom}{公理}{公理}
+\Crefname{hypothesis}{假设}{假设}
+\Crefname{theorem}{定理}{定理}
+\Crefname{lemma}{引理}{引理}
+\Crefname{proposition}{命题}{命题}
+\Crefname{corollary}{推论}{推论}
+\Crefname{metatheorem}{元定理}{元定理}
+\Crefname{criteria}{准则}{准则}
+\Crefname{problem}{问题}{问题}
+\Crefname{exercise}{习题}{习题}
+\Crefname{example}{例}{例}
+\Crefname{remark}{注记}{注记}
+\Crefname{sketch}{分析}{分析}
+\Crefname{algorithm}{算法}{算法}
+\Crefname{convention}{约定}{约定}
+\Crefname{alarm}{警示}{警示}
+
 % -- 5.3.3 图、表、公式的中文引用名与标题名 --
 % （ctexart scheme=plain 下默认是英文 Figure/Table，这里统一为中文）
 \crefname{figure}{图}{图}
@@ -419,6 +438,9 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \newcommand{\K}{\mathbb{K}}              % 域
 \newcommand{\F}{\mathbb{F}}              % 有限域
 \renewcommand{\emptyset}{\varnothing}    % 更美观的空集
+\renewcommand{\Re}{\operatorname{Re}}    % 实部（覆盖内核的花体命令）
+\renewcommand{\Im}{\operatorname{Im}}    % 虚部（覆盖内核的花体命令）
+\renewcommand{\i}{\mathrm{i}}            % 虚数单位（覆盖内核的点 i）
 \newcommand{\fin}{\operatorname{Fin}}    % 有限
 \newcommand{\Coll}{\operatorname{Coll}}  % 集合族/集合汇集
 \newcommand{\FuncRel}{\operatorname{FuncRel}} % 函数关系
@@ -547,6 +569,7 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \newcommand{\closure}{\operatorname{cl}}   % 闭包
 \newcommand{\supp}{\operatorname{supp}}    % 支集
 \newcommand{\disc}{\operatorname{disc}}    % 判别式/离散
+\newcommand{\dd}{\mathop{}\!\mathrm{d}}    % 微分算子（前面自动留细空）
 \newcommand{\tw}{\operatorname{tw}}        % 扭结 (Twist)
 
 
