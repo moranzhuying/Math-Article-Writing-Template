@@ -84,7 +84,7 @@
 
 ## 更新日志
 
-详细更新记录见 [ChangeLog.md](./ChangeLog.md)。
+详细更新记录见 [CHANGELOG.md](./CHANGELOG.md)。
 
 ## 使用
 
