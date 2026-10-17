@@ -674,6 +674,8 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 % 就在当前项之前插入 \nobreak（= 惩罚 10000）。它既不能在此处分栏，也使其后的
 % \addvspace 胶水不再构成断点（胶水前面是可丢弃的惩罚项）。同级项之间照常可分栏，
 % 不影响两栏平衡。本模板是 ctexart，无 chapter/part：节 0、目 1、款 2，故节的前驱记为 -1。
+% ⚠️ 只夹紧「节→目」这一层。若把「目→款」也一起夹，连续几级会绑成一条链，一栏装不下时
+%    就顶出一行（书模板上实测：116 条目录让目录页溢出 8.76pt，Overfull \vbox）。
 % ⚠️ 必须等 \l@subsection 定型（article 类 + hyperref 已加载，本段在模块 VII，
 %    即 \begin{document} 之前）之后再包，且用 \let 先抓住现有含义，
 %    否则会丢掉 hyperref 的链接包装。
@@ -687,7 +689,7 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \let\yukina@toc@subsection\l@subsection
 \renewcommand{\l@subsection}[2]{\yukina@toc@guard{1}{0}\yukina@toc@subsection{#1}{#2}}
 \let\yukina@toc@subsubsection\l@subsubsection
-\renewcommand{\l@subsubsection}[2]{\yukina@toc@guard{2}{1}\yukina@toc@subsubsection{#1}{#2}}
+\renewcommand{\l@subsubsection}[2]{\yukina@toc@guard{2}{-1}\yukina@toc@subsubsection{#1}{#2}}
 
 \usepackage{multicol}
 \let\oldtableofcontents\tableofcontents
