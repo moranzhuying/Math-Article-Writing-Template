@@ -1,8 +1,12 @@
 \renewcommand{\refname}{Appendix B 参考文献}
+% \phantomsection 先建立独立链接目标；\addcontentsline 必须在标题（thebibliography
+% 环境开头）所在位置执行：若落在 \end{thebibliography} 之后，登记的是环境末尾的页码，
+% 且会继承上一个 \@currentHref（如 equation.*），导致目录项与标题实际所在页、锚点都不符。
+\phantomsection
+\addcontentsline{toc}{section}{Appendix B 参考文献}
 \begin{thebibliography}{99}
     \bibitem{bourbaki}
     N. Bourbaki,
     \emph{Éléments de mathématique},
     Hermann, Paris.
 \end{thebibliography}
-\addcontentsline{toc}{section}{Appendix B 参考文献}

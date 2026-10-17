@@ -253,13 +253,31 @@ base_thmstyle, label type=alarm, colback=mainyellow!16!white, accent north=mainr
 % -------- 4.6 证明 / 回答 / 提示 / 代码环境 --------
 
 % -- 4.6.1 证明：灰色顶线，自动加证毕符号（∎） --
+% 证毕符号默认由 after upper 追加。若证明以陈列公式收尾，它落在公式**之后**，
+% 于是另起一行、单独右端 —— 这与 amsthm 的默认行为一致，但排版上更希望贴在末公式行尾。
+% 要贴到同一行，用 \qedhere（与 amsthm 同用法），放在末公式里：
+%     \begin{proof} ... \[ a=b.\qedhere \] \end{proof}
+% 它就地排符号，并把 after upper 的自动符号抑制掉，避免出现两个方框。
+% ⚠️ 不做「自动上移」：那要改写 \[ / equation 的收尾时机，跨宏包组合极易失效。
+% ⚠️ 不能沿用 amsmath 的 \qedhere：它只在 equation/align 系列里真的吐出符号，
+%    放进 \[...\] 里实测什么都不输出（而证明里的陈列公式多数正是 \[...\]）。
+%    故这里改成自己的实现——就地 \hfill 排方框并置标记，after upper 见标记就不再补。
+%    方框用 \ensuremath：调用点本来就在数学模式里，写成 $\square$ 会触发
+%    「Display math should end with $$」。
+\newif\ifyukina@qedplaced
+\renewcommand{\qedhere}{\global\yukina@qedplacedtrue\hfill\ensuremath{\square}}
+% ⚠️ 文章模板差异：本库 base_thmstyle 用了 attach title to upper，而 tcolorbox 把该键
+%    实现为「before upper={...\tcbtitle...}」。若直接写 before upper 重置标记，会**顶掉**
+%    标题附着，证明标题「证明」整行消失（实测：默认样例第 4 页）。故重置改用 before 键
+%    ——它在盒子开始之前执行，不占用 upper 的内容。
 \newtcolorbox{proof}{
 	base_thmstyle,
 	title={证明},
 	coltitle=maingray,
 	accent north=maingray!50,
 	colback=white,
-	after upper={\hfill $\square$} % 自动加证明完毕符号
+	before={\global\yukina@qedplacedfalse}, % 每次进入证明重置（breakable 盒子会分包，须全局）
+	after upper={\ifyukina@qedplaced\else\hfill $\square$\fi} % 自动加证明完毕符号
 }
 
 % -- 4.6.2 回答：灰色顶线 --
@@ -418,6 +436,18 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \Crefname{convention}{约定}{约定}
 \Crefname{alarm}{警示}{警示}
 
+% -- 5.3.2c 结构层级（节 / 目 / 款）的引用名 --
+% cleveref 只给这些层级内置英文名，中文笔记里 \cref{sec} 会印出「section 1」。
+% 补齐后与正文口径一致：节在正文渲染为「§n」，但引用写成「节 §7」比裸「§7」更清楚，
+% 故名称仍取「节」；目（subsection）对应 Bourbaki 的 no.，款为再下一级。
+% 本模板是 ctexart，无 part/chapter，故只列节及以下三级。
+\crefname{section}{节}{节}
+\crefname{subsection}{目}{目}
+\crefname{subsubsection}{款}{款}
+\Crefname{section}{节}{节}
+\Crefname{subsection}{目}{目}
+\Crefname{subsubsection}{款}{款}
+
 % -- 5.3.3 图、表、公式的中文引用名与标题名 --
 % （ctexart scheme=plain 下默认是英文 Figure/Table，这里统一为中文）
 \crefname{figure}{图}{图}
@@ -429,6 +459,28 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \renewcommand{\figurename}{图}
 \renewcommand{\tablename}{表}
 \renewcommand{\autoref}[1]{\cref{#1}}
+
+% -------- 5.3.4 修补 ctex 与 cleveref 的标签前缀冲突 --------
+% 症状：带 \label 的节/目，第二遍编译报 `Extra \endcsname`，且 .aux 里
+%   \newlabel{<label>@cref}{{[section][1][]1thesection\endcsname }...}
+%   混入「the<级别>\endcsname」，\cref 结果因此不可靠。
+% 根因：ctex 把 \p@<级别> 定义成**接受一个参数**、展开为 \CTEX@the<级别> 的宏
+%   （见 ctex-heading-*.def 的 \CTEX@setcurrentlabel@n）。cleveref 沿用内核写法
+%   \csname p@<级别>\endcsname\csname the<级别>\endcsname，于是前缀宏把紧跟的
+%   \csname 当成参数吃掉，剩下「the<级别>\endcsname」落进标签数据。
+% 修法：把各级前缀宏置空。编号由同一构造里的 \csname the<级别>\endcsname 提供，
+%   \@currentlabel 与 \ref 的显示不变（ctex 另走 \CTEX@setcurrentlabel@n 路径）。
+% 注意：本模板是 ctexart，无 chapter/part，故只处理 section 及以下各级。
+% ⚠️ 不要在这里加 \makeatletter/\makeatother：本文件是 .sty，读入时 @ 已是字母
+%   （catcode 11），\makeatother 会把它复位成 12，令本段之后所有 \@starttoc / \yukina@…
+%   等控制序列解析错位（实测报 `Missing \begin{document}`、`Command \yukina already defined`）。
+\newcommand{\yukina@clear@ctexprefix}[1]{%
+    \@ifundefined{CTEX@the#1}{}{\expandafter\let\csname p@#1\endcsname\@empty}}
+\yukina@clear@ctexprefix{section}
+\yukina@clear@ctexprefix{subsection}
+\yukina@clear@ctexprefix{subsubsection}
+\yukina@clear@ctexprefix{paragraph}
+\yukina@clear@ctexprefix{subparagraph}
 
 % -------- 5.4 多标签引用连接词 --------
 % 默认英文 and，改为中文「和」；连续编号范围用「到」。
@@ -524,10 +576,25 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 \newcommand{\Mo}{\operatorname{Mo}}      % 幺半群相关记号
 \newcommand{\Mag}{\operatorname{Mag}}    % 原群 (magma)
 \newcommand{\Core}{\operatorname{Core}}  % 核心/正规核
-\newcommand{\bigast}{\mathop{\vcenter{\hbox{\scalebox{1.5}{$\ast$}}}}\displaylimits}      % 大星号算子
-\newcommand{\bigtop}{\mathop{\vcenter{\hbox{\scalebox{1.5}{$\top$}}}}\displaylimits}      % 大 top 算子
-\newcommand{\bigbot}{\mathop{\vcenter{\hbox{\scalebox{1.5}{$\bot$}}}}\displaylimits}      % 大 bot 算子
-\newcommand{\bigboxplus}{\mathop{\vcenter{\hbox{\scalebox{1.5}{$\boxplus$}}}}\displaylimits} % 大盒加算子
+% 数学样式感知的大算子：见下方 ⚠️ 的定位说明，再按 1.5 倍缩放。display/text 与旧版完全一致（宽 7.50002pt），
+% script / scriptscript 依次缩小（实测 6.14584pt / 5.52087pt）。
+% ⚠️ \mathchoice 要放进 \mathop 的参数里，不能放在最外层：放最外层时
+%    \bigast 直接展开成 \mathchoice{…\mathop{…}…}，\limits 失去宿主，
+%    实测 \bigast\limits 报「Limit controls must follow a math operator」
+%    （Algebra 笔记里就有这种写法）；而放进 \vcenter 的 \hbox 又看不到
+%    当前样式（三档恒为 7.50002pt）。折中即下面这种写法。
+\newcommand{\yukina@bigopaux}[2]{%
+    \vcenter{\hbox{\scalebox{1.5}{$#1 #2$}}}}
+\newcommand{\yukina@bigop}[1]{%
+    \mathop{\mathchoice
+        {\yukina@bigopaux{\displaystyle}{#1}}%
+        {\yukina@bigopaux{\textstyle}{#1}}%
+        {\yukina@bigopaux{\scriptstyle}{#1}}%
+        {\yukina@bigopaux{\scriptscriptstyle}{#1}}}\displaylimits}
+\newcommand{\bigast}{\yukina@bigop{\ast}}          % 大星号算子
+\newcommand{\bigtop}{\yukina@bigop{\top}}          % 大 top 算子
+\newcommand{\bigbot}{\yukina@bigop{\bot}}          % 大 bot 算子
+\newcommand{\bigboxplus}{\yukina@bigop{\boxplus}}  % 大盒加算子
 \newcommand{\Shuffle}{\operatorname{Sf}} % shuffle 运算
 \newcommand{\Pol}{\operatorname{Pol}}    % 多项式空间
 \newcommand{\mult}{\operatorname{mult}}  % 重数
@@ -599,6 +666,29 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
 % ================================================================
 % 目录以双栏排版（标题通栏，内容分两栏），减少目录占用页数。
 % 重定义 \tableofcontents，正文中照常使用即可，无需改动 main.tex。
+
+% -------- 7.1 父标题不与首个子项分栏 --------
+% 双栏目录允许在任意两行之间分栏，于是会出现「§7 某节」卡在第一栏末行、它的第一个目
+% 跑到第二栏首行 —— 父项孤零零吊在栏底，读者还以为那一节没有子项。
+% 做法：记住上一条目录项的层级，若当前项正好是它的直接子级（父→首个子项这一种情形），
+% 就在当前项之前插入 \nobreak（= 惩罚 10000）。它既不能在此处分栏，也使其后的
+% \addvspace 胶水不再构成断点（胶水前面是可丢弃的惩罚项）。同级项之间照常可分栏，
+% 不影响两栏平衡。本模板是 ctexart，无 chapter/part：节 0、目 1、款 2，故节的前驱记为 -1。
+% ⚠️ 必须等 \l@subsection 定型（article 类 + hyperref 已加载，本段在模块 VII，
+%    即 \begin{document} 之前）之后再包，且用 \let 先抓住现有含义，
+%    否则会丢掉 hyperref 的链接包装。
+\newcount\yukina@toc@prevlevel
+\yukina@toc@prevlevel=-9
+\newcommand{\yukina@toc@guard}[2]{% #1 = 本级， #2 = 父级
+    \ifnum\yukina@toc@prevlevel=#2 \nobreak\fi
+    \global\yukina@toc@prevlevel=#1\relax}
+\let\yukina@toc@section\l@section
+\renewcommand{\l@section}[2]{\yukina@toc@guard{0}{-1}\yukina@toc@section{#1}{#2}}
+\let\yukina@toc@subsection\l@subsection
+\renewcommand{\l@subsection}[2]{\yukina@toc@guard{1}{0}\yukina@toc@subsection{#1}{#2}}
+\let\yukina@toc@subsubsection\l@subsubsection
+\renewcommand{\l@subsubsection}[2]{\yukina@toc@guard{2}{1}\yukina@toc@subsubsection{#1}{#2}}
+
 \usepackage{multicol}
 \let\oldtableofcontents\tableofcontents
 \renewcommand{\tableofcontents}{%

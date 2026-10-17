@@ -1,9 +1,49 @@
 # 更新日志 (ChangeLog)
 
-**版本日期**: 2026-10-10
+**版本日期**: 2026-10-17
+**上一版日期**: 2026-10-10
 **当前状态**: 模板初始版本，持续完善中
 
 ---
+
+## 2026-10-17 更新概览
+
+按四套模板的联合排版审查结论修复缺陷，并落实排版政策。
+
+### 缺陷修复
+
+* **节 / 目的智能引用（cleveref）**
+    * 修掉第二遍编译报 `Extra \endcsname`、`.aux` 里 `@cref` 混入 `the<级别>\endcsname` 的问题。
+      根因是 ctex 的 `\p@<级别>` 与 cleveref 的内核写法冲突；改为把各级前缀宏置空。
+* **目录项的链接目标**
+    * 前言、术语对照表与三个测试附录的无编号标题补 `\phantomsection`，此前它们复用
+      Contents 或正文小结的旧锚点，点击会跳错位置。
+* **参考文献的目录登记位置**
+    * `\addcontentsline` 从 `\end{thebibliography}` 之后移到标题所在处，并补 `\phantomsection`。
+      此前登记的是环境末尾的页码，还继承 `equation.*` 旧锚点（跨页压力样例里标题在第 8 页、
+      目录却记第 10 页）。
+* **证毕符号可贴末公式同行**
+    * 新增 `\qedhere`；重置标记用 `before` 键——本库 `base_thmstyle` 用了 `attach title to upper`，
+      写 `before upper` 会让「证明」标题整行消失。
+* **双栏目录：父标题与首个子项不分栏**
+    * 节与其第一个目之间插入 `\nobreak`。
+
+### 优化与改进
+
+* **结构层级引用名改为中文**
+    * 补 `\crefname` / `\Crefname`：节、目、款。此前 `\cref{sec}` 会印出英文 `section`。
+
+### 优化与改进
+
+* **大算子跟随数学样式缩小**
+    * `\bigast` / `\bigtop` / `\bigbot` / `\bigboxplus` 改用 `\mathop{\mathchoice…}` 实现：
+      展示与正文样式下与旧版一致（实测宽 7.50002pt），上下标里依次缩小（6.14584pt / 5.52087pt）。
+      `\mathchoice` 放在 `\mathop` 的参数里而非最外层——放最外层会让 `\bigast\limits` 报
+      「Limit controls must follow a math operator」。
+* **撇号与前字符的间距**
+    * 重定义字符 `'` 与 `\prime`，在撇号前插入 `\primeKern`（默认 1mu），使 `\mathbf{f}'` 这类
+      直立字体族的撇号间距与斜体一致；上下标中按字号自动缩小。
+
 
 ## 2026-10-10 更新概览
 
