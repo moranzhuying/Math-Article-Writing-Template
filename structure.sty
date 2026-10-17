@@ -58,6 +58,10 @@
 % -------- 2.1 数学核心宏包 --------
 \usepackage{amsmath, amsfonts, amssymb, amsthm}
 \usepackage{mathrsfs, stmaryrd, mathtools}
+% stmaryrd 没有粗体字库：不声明的话，\bm{} / \mathbf 落到 stmry 家族时会报
+% Font shape `U/stmry/b/n' undefined，\mathscr 一类的粗体随后悄悄退回常规字形。
+% 让粗体数学版本直接复用常规字形（原先只在 LaTeX_Notes/Algebra 里本地声明，现收进模板）。
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n}
 
 % -------- 2.2 绘图与交换图 --------
 \usepackage{tikz}
@@ -123,6 +127,17 @@
 \titlespacing{\subsection}{0pt}{*3.25}{*1.25}
 \titleformat{\subsubsection}{\normalfont\normalsize\bfseries\raggedright}{\thesubsubsection}{1em}{}
 \titlespacing{\subsubsection}{0pt}{*3.25}{*1.25}
+
+% -------- 3.1.1 无编号但有目录项的标题 --------
+% 前言、术语表、附录这类标题要三件事一起做：星号标题 + 独立锚点 + 写目录项。
+% 三件套散着写有两处常错：漏 \phantomsection（目录项复用上一个锚点，点击跳错），
+% 以及 \section* 不记标题名（\newlabel 第三字段空着，\nameref 印不出东西）。
+% 用一个宏收口：\unnumberedsection{<级别>}{<标题>}，级别取 section / subsection / subsubsection。
+\newcommand{\unnumberedsection}[2]{%
+    \csname #1\endcsname*{#2}%
+    \phantomsection
+    \protected@edef\@currentlabelname{#2}%
+    \addcontentsline{toc}{#1}{#2}}
 
 % -------- 3.2 页眉页脚 (fancyhdr) --------
 % 页面风格：页码居中于页脚底部，无页眉横线。
