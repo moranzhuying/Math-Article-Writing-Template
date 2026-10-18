@@ -108,8 +108,26 @@
 % 已知副作用：直立字体后的一切上标（\mathbb{R}^{n}、\mathbf{A}^{-1}）都右移同样的量。
 \newcommand{\uprightKern}{1.5mu}
 \let\yukina@caret=^
+\let\yukina@sub=_
 \def\yukina@uprightpeek{\futurelet\yukina@peektok\yukina@uprighttest}
 \def\yukina@uprighttest{%
+  \ifx\yukina@peektok\yukina@caret
+    \mkern\uprightKern
+  \else
+    \expandafter\yukina@uprighttest@sub
+  \fi}
+% 中间夹下标的情形（\mathbf{f}_{i}^{\prime}）：下标不属于上标，kern 必须落到下标之后。
+% 做法是吃掉 _ 及其第一个 token 再原样重放（下标若为 {…}，重放的 { 会让后续内容自然归组），
+% 然后在下标之后再做一次前瞻。
+\def\yukina@uprighttest@sub{%
+  \ifx\yukina@peektok\yukina@sub
+    \expandafter\yukina@subtail
+  \fi}
+% 单 token 参数遇到 { 时会吃掉整个组，故重放时必须补回花括号 —— 否则
+% \mathscr{F}_{\mathfrak{S}_{1}} 会变成 _\mathfrak{S}_{1}，报 Double subscript。
+\def\yukina@subtail_#1{_{#1}\yukina@after@sub}
+\def\yukina@after@sub{\futurelet\yukina@peektok\yukina@after@subtest}
+\def\yukina@after@subtest{%
   \ifx\yukina@peektok\yukina@caret
     \mkern\uprightKern
   \fi}
