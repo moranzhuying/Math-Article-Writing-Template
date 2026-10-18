@@ -90,26 +90,44 @@
 \setlist[itemize,2]{label=$\triangleright$}  % 二级：▷
 \setlist[itemize,3]{label=$\ast$}            % 三级：∗
 
-% -------- 2.6 撇号（prime）与前字符的间距 --------
-% 背景：Computer Modern 的直立字体族（\mathbf 用的 cmbx、\mathbb、\mathscr 等）
-% 不带 italic correction，而数学斜体（cmmi）带。LaTeX 把撇号排在「前字符宽度 +
-% 斜体校正」之后，于是 \mathbf{f}' 的撇号会紧贴字母笔画，$f'$（斜体）却留有空隙，
-% 同一公式里粗体、斜体混排时撇号间距不一致。
-% 修法：重定义撇号的两个入口 —— 字符 '（内核中展开为 ^\bgroup\prim@s）与 \prime
-% —— 在撇号前插入 \primeKern。连续撇 f'' 只在首撇前留空、其后紧排，与原行为一致；
-% 单位用 mu（相对字号），故上下标中的间距自动按比例缩小。
-% 调整：改 \primeKern 的值即可（默认 1mu ≈ 0.056em；想更松可试 1.5mu 或 2mu）。
-% 代价：\prime 由字符变为宏，\bm{\prime} 这类对 \prime 取粗体的写法不再可靠
-% （本模板未使用）。
-\newcommand{\primeKern}{1mu}
-\let\yukina@primechar\prime
-\renewcommand{\prime}{\mkern\primeKern\yukina@primechar}
-\def\prim@s{\yukina@primechar\futurelet\@let@token\pr@m@s}
-\def\active@math@prime{^\bgroup\mkern\primeKern\prim@s}
-\begingroup
-  \catcode`\'=\active
-  \global\let'\active@math@prime
-\endgroup
+% -------- 2.6 直立字体族的上标间距（撇号与括号上标） --------
+% 背景：CM 的直立字体族（\mathbf 用的 cmbx、\mathsf、\mathrm、\mathbb、\mathscr）
+% 不带 italic correction，而数学斜体 cmmi 带。TeX 把上标排在「前字符宽度」之后，
+% 于是 \mathbf{f}^{\prime}、\mathbf{f}^{(1)} 的撇号与左括号都紧贴字母笔画；
+% 同样写法换斜体 $f^{\prime}$ 却留有空隙。
+% 修法：给直立字体命令包一层 —— 参数之后 \futurelet 前瞻，仅当下一个 token 是 ^
+% （上标起始）时插入 \uprightKern。斜体不经过这些命令，因此一字不动；
+% \prime 保持内核原样（\bm{\prime} 照旧可用）。
+% 调整：改 \uprightKern 的值即可（默认 1.5mu；10pt 上标阶约合 0.83pt）。
+% 取值是折中 —— 撇号和左括号要够开，字母/数字上标又不能太远，而三者共用同一个值
+% （\futurelet 只看得到 ^，看不到上标内容，无法分别处理）。
+% 实测观感（10pt）：1mu 撇号仍偏紧；2.5mu 时 \mathbb{R}^{n}、\mathbf{A}^{-1} 明显偏宽；
+% 1.5mu 与斜体 $R^{n}$ 的间隙最接近。斜体本身不受影响，始终维持 0.78pt。
+% 未覆盖：中间夹下标的写法（\mathbf{f}_{i}^{\prime}）前瞻到的是 _，不补 —— 那种位置
+% 撇号落在下标上方，紧贴感不如直接上标明显。
+% 已知副作用：直立字体后的一切上标（\mathbb{R}^{n}、\mathbf{A}^{-1}）都右移同样的量。
+\newcommand{\uprightKern}{1.5mu}
+\let\yukina@caret=^
+\def\yukina@uprightpeek{\futurelet\yukina@peektok\yukina@uprighttest}
+\def\yukina@uprighttest{%
+  \ifx\yukina@peektok\yukina@caret
+    \mkern\uprightKern
+  \fi}
+% 不能直接 \renewcommand 这些命令：LaTeX 的 math alphabet 命令体按**名字引用自身**，
+% 覆盖后报「Math alphabet identifier \mathbf is undefined in math version normal」，
+% 且字形会退成数学斜体（实测）。故另声明独立 alphabet，字体参数照原样取。
+% 实测（本机 ctexbook + XeLaTeX）：\mathbf=TU/lmr/b/n、\mathsf=TU/lmss/m/n、
+% \mathrm=TU/lmr/m/n、\mathbb=U/msb/m/n、\mathscr=U/rsfs/m/n。
+\DeclareMathAlphabet{\yukina@uprightbf}{\encodingdefault}{\rmdefault}{\bfdefault}{n}
+\DeclareMathAlphabet{\yukina@uprightsf}{\encodingdefault}{\sfdefault}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightrm}{\encodingdefault}{\rmdefault}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightbb}{U}{msb}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightscr}{U}{rsfs}{m}{n}
+\protected\def\mathbf#1{\yukina@uprightbf{#1}\yukina@uprightpeek}
+\protected\def\mathsf#1{\yukina@uprightsf{#1}\yukina@uprightpeek}
+\protected\def\mathrm#1{\yukina@uprightrm{#1}\yukina@uprightpeek}
+\protected\def\mathbb#1{\yukina@uprightbb{#1}\yukina@uprightpeek}
+\protected\def\mathscr#1{\yukina@uprightscr{#1}\yukina@uprightpeek}
 
 
 % ================================================================
