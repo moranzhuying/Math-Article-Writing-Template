@@ -159,17 +159,6 @@
 \titleformat{\subsubsection}{\normalfont\normalsize\bfseries\raggedright}{\thesubsubsection}{1em}{}
 \titlespacing{\subsubsection}{0pt}{*3.25}{*1.25}
 
-% -------- 3.1.1 无编号但有目录项的标题 --------
-% 前言、术语表、附录这类标题要三件事一起做：星号标题 + 独立锚点 + 写目录项。
-% 三件套散着写有两处常错：漏 \phantomsection（目录项复用上一个锚点，点击跳错），
-% 以及 \section* 不记标题名（\newlabel 第三字段空着，\nameref 印不出东西）。
-% 用一个宏收口：\unnumberedsection{<级别>}{<标题>}，级别取 section / subsection / subsubsection。
-\newcommand{\unnumberedsection}[2]{%
-    \csname #1\endcsname*{#2}%
-    \phantomsection
-    \protected@edef\@currentlabelname{#2}%
-    \addcontentsline{toc}{#1}{#2}}
-
 % -------- 3.2 页眉页脚 (fancyhdr) --------
 % 页面风格：页码居中于页脚底部，无页眉横线。
 \usepackage{fancyhdr}
@@ -749,3 +738,20 @@ base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainp
   \end{multicols}%
   \endgroup
 }
+
+% ================================================================
+% [模块 VIII] 无编号但进目录的标题
+% ================================================================
+% 前言、导引、小结这类标题要三件事一起做：星号标题 + 独立锚点 + 写目录项。
+% 三件套散着写有两处常错：
+%   ① 漏 \phantomsection —— 目录项复用上一个锚点，点击跳到别处；
+%   ② 星号标题不记标题名 —— \newlabel 第三字段空着，\nameref 印不出东西。
+% 收口成一个宏：\unnumberedsection{<级别>}{<标题>}，级别取 section / subsection / subsubsection。
+% 本文件是 .sty，读入时 @ 已是字母，无需 \makeatletter。
+% ⚠️ 星号标题既不步进也不重置下级计数器：小结下面若还挂带编号的下级标题，
+%    会接着上一层的号继续排（出现「2 小结内容」这种孤立编号）。故小结的条目同样用本宏。
+\newcommand{\unnumberedsection}[2]{%
+    \csname #1\endcsname*{#2}%
+    \phantomsection
+    \protected@edef\@currentlabelname{#2}%
+    \addcontentsline{toc}{#1}{#2}}

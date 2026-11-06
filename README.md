@@ -15,9 +15,10 @@
 ├── Content/                  # 内容目录
 │   ├── Preface/              # 前言：全书结构、更新记录、记号说明
 │   ├── 01_Test_Section/      # 正文测试节（三级嵌套示例）
-│   │   ├── intro.tex         #   本节导引
-│   │   ├── 01_Test_Subsection/  # 小节：index.tex + 段落文件
-│   │   ├── Summary/          #   本节小结
+│   │   ├── index.tex         #   本节汇总：\section + intro + 各小节
+│   │   ├── intro.tex         #   本节导引（紧随 \section 之后）
+│   │   ├── 01_Test_Subsection/  # 小节：index.tex + intro.tex + 段落文件 + Summary/
+│   │   ├── Summary/          #   本节小结（置于各小节之后）
 │   │   └── Appendix_Test_A/  #   节内附录
 │   ├── 02_Test_Section/      # 正文测试节
 │   └── Appendix/             # 后记：术语对照表、参考文献
@@ -64,7 +65,9 @@
 
 ### 6. 内容分层管理
 
-正文采用 section → subsection → subsubsection 三级嵌套结构，每层目录有 `index.tex` 汇总、逐级 `\input`。每节附带 `intro.tex`（本节导引）、`Summary/`（本节小结），每小节可带 `Summary/`（本小节小结）与节内附录 `Appendix_Name/`，将文档拆分为小文件，便于维护与复用。
+正文采用 section → subsection → subsubsection 三级嵌套结构，每层目录有 `index.tex` 汇总、逐级 `\input`。每节附带 `intro.tex`（本节导引）、`Summary/`（本节小结），每小节带 `intro.tex`（本小节导引）、`Summary/`（本小节小结）以及可选的节内附录 `Appendix_Name/`，将文档拆分为小文件，便于维护与复用。
+
+**导引与小结分处两端**：导引放在本层最前，小结放在本层最后。`Summary/` 目录只放小结内容，不放 `intro.tex`。导引用纯星号标题、不进目录（本节导引 `\subsection*{本节导引}`，本小节导引 `\subsubsection*{本小节导引}`）；小结不占编号但进目录，用 `\unnumberedsection{<级别>}{<标题>}`（`structure.sty` 模块 VIII），例如 `\unnumberedsection{subsection}{本节小结}`。
 
 > 与 ctexbook 版的对应关系：章 → 节、节 → 小节、小节 → 段（subsubsection）。定理/习题编号仍为「1.1」形式（挂节编号）。
 
