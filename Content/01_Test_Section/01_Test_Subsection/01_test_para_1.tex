@@ -1,0 +1,43 @@
+\subsubsection{测试段一}
+
+这是一段测试用的正文文字,用于验证模板的中文排版效果.可以行内插入数学记号,如 $\mathbb{R}$,$\mathcal{F}$,$\N$ 等,也可以使用列表环境:
+
+\begin{itemize}
+    \item 第一个要点.
+    \item 第二个要点.
+    \item 第三个要点.
+\end{itemize}
+
+下面测试图片插入与引用(如图~\ref{fig:test-pic}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Figures/ran-0.png}
+    \caption{一张测试图片}
+    \label{fig:test-pic}
+\end{figure}
+
+图片引用测试:\ref{fig:test-pic},\autoref{fig:test-pic},\cref{fig:test-pic}.
+
+\medskip
+
+下面测试两张图片并排(\ref{fig:side-1} 与 \ref{fig:side-2}).
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/ran-1.png}
+        \caption{并排图一}
+        \label{fig:side-1}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Figures/moca-0.png}
+        \caption{并排图二}
+        \label{fig:side-2}
+    \end{minipage}
+\end{figure}
+
+并排图引用测试:\autoref{fig:side-1},\autoref{fig:side-2}.

@@ -1,0 +1,757 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{./structure}[2026/09/02 Personal document structure (article)]
+
+% ================================================================
+% structure.sty — 数学笔记模板核心样式包（ctexart 版）
+% ================================================================
+% 由 main.tex 通过 \usepackage{./structure} 加载（须用 XeLaTeX 编译）。
+%
+% 与 ctexbook 版（笔记写作）的区别：
+%   - 文档类为 ctexart，最高层级为 \section（无 \chapter / \part / frontmatter）。
+%   - 三级嵌套结构整体下移一级：章->节、节->小节、小节->段（subsubsection）。
+%   - 定理/习题计数器从 chapter 改挂 section（编号仍为「1.1」形式）。
+%   - 不设独立习题集，习题/解答环境保留、随正文内嵌使用。
+%
+% 模块划分：
+%   I.   页面与基础设置
+%   II.  宏包加载（数学 / 绘图 / 表格 / 列表）
+%   III. 章节标题与页眉页脚
+%   IV.  定理与证明环境（tcolorbox）
+%   V.   引用与超链接（hyperref + cleveref）
+%   VI.  数学符号定义库
+%
+% 注意：各宏包加载顺序存在依赖关系，请勿随意调整。
+% ================================================================
+
+
+% ================================================================
+% [模块 I] 页面与基础设置
+% ================================================================
+
+% -------- 1.1 页面布局 (geometry) --------
+% A4 纸张，左右 1.5cm、上下 2cm 边距，单倍行距。
+\usepackage{geometry}
+\geometry{a4paper, left=1.5cm, right=1.5cm, top=2cm, bottom=2cm}
+\linespread{1}
+
+% -------- 1.2 英文字体 (fontspec) --------
+% 英文正文字体：默认 Latin Modern（Computer Modern 系，等号无衬线，
+% \implies 等长双线箭头渲染为标准几何风格）。
+% 中文由 ctexart 自动处理；数学字体由 amsmath/amssymb 提供，此处不改动。
+
+% -------- 1.3 基础宏包 --------
+\usepackage{color}     % 颜色支持（\color、\colorbox 等）
+\usepackage{bm}        % 粗体数学符号（\bm）
+
+% -------- 1.4 编号与目录深度 --------
+% article 类三级结构：section(1) -> subsection(2) -> subsubsection(3)。
+% 默认 secnumdepth/tocdepth 可能不含 subsubsection，这里显式设为 3，
+% 使第三级小节带编号并出现在目录中。
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+
+% ================================================================
+% [模块 II] 宏包加载
+% ================================================================
+
+% -------- 2.1 数学核心宏包 --------
+\usepackage{amsmath, amsfonts, amssymb, amsthm}
+\usepackage{mathrsfs, stmaryrd, mathtools}
+% stmaryrd 没有粗体字库：不声明的话，\bm{} / \mathbf 落到 stmry 家族时会报
+% Font shape `U/stmry/b/n' undefined，\mathscr 一类的粗体随后悄悄退回常规字形。
+% 让粗体数学版本直接复用常规字形（原先只在 LaTeX_Notes/Algebra 里本地声明，现收进模板）。
+\SetSymbolFont{stmry}{bold}{U}{stmry}{m}{n}
+
+% -------- 2.2 绘图与交换图 --------
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{graphicx}
+
+% -------- 2.3 表格增强宏包 --------
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% -------- 2.4 行距与数据绘图 --------
+\usepackage{setspace}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% -------- 2.5 列表环境 (enumitem) --------
+\usepackage{enumerate}
+\usepackage{enumitem}
+\setlist[enumerate,1]{label=(\arabic*)}      % 一级编号：(1)(2)(3)
+\setlist[itemize,1]{label=$\diamond$}        % 一级：◆
+\setlist[itemize,2]{label=$\triangleright$}  % 二级：▷
+\setlist[itemize,3]{label=$\ast$}            % 三级：∗
+
+% -------- 2.6 直立字体族的上标间距（撇号与括号上标） --------
+% 背景：CM 的直立字体族（\mathbf 用的 cmbx、\mathsf、\mathrm、\mathbb、\mathscr）
+% 不带 italic correction，而数学斜体 cmmi 带。TeX 把上标排在「前字符宽度」之后，
+% 于是 \mathbf{f}^{\prime}、\mathbf{f}^{(1)} 的撇号与左括号都紧贴字母笔画；
+% 同样写法换斜体 $f^{\prime}$ 却留有空隙。
+% 修法：给直立字体命令包一层 —— 参数之后 \futurelet 前瞻，仅当下一个 token 是 ^
+% （上标起始）时插入 \uprightKern。斜体不经过这些命令，因此一字不动；
+% \prime 保持内核原样（\bm{\prime} 照旧可用）。
+% 调整：改 \uprightKern 的值即可（默认 1.5mu；10pt 上标阶约合 0.83pt）。
+% 分级方案下这个值只作用于撇号与左括号，字母/数字上标完全不补，不必再为兼顾两者妥协。
+% 斜体不经过这些命令，始终维持字体自带的 0.78pt。
+\newcommand{\uprightKern}{1.5mu}
+\let\yukina@caret=^
+\def\yukina@uprightpeek{\futurelet\yukina@peektok\yukina@uprighttest}
+\def\yukina@uprighttest{%
+  \ifx\yukina@peektok\yukina@caret
+    \expandafter\yukina@readsup
+  \fi}
+% 把上标内容整个读进来，按**首 token** 分级：
+%   以 \prime 或 ( 开头 → 插 kern；字母、数字、负号等 → 原样重建，不插。
+% 于是 \mathbf{f}^{\prime}、\mathbf{f}^{(1)} 的撇号与括号离开笔画，而
+% \mathbb{R}^{n}、\mathbf{A}^{-1}、\mathbf{f}^{2} 一个像素都不动。
+% 夹下标的情形（\mathbf{f}_{i}^{\prime}）无需处理：下标本身占据水平宽度，
+% 上标起点已在下标之后，撇号本来就不贴 f（实测间距 3.33pt）。
+\def\yukina@readsup^#1{\yukina@sift#1\yukina@siftend^{#1}}
+\def\yukina@sift{\futurelet\yukina@sifttok\yukina@sift@a}
+\def\yukina@sift@a{%
+  \ifx\yukina@sifttok\prime
+    \mkern\uprightKern
+  \else
+    \ifx\yukina@sifttok(
+      \mkern\uprightKern
+    \fi
+  \fi
+  \yukina@eatall}
+\def\yukina@eatall#1\yukina@siftend{}
+% 不能直接 \renewcommand 这些命令：LaTeX 的 math alphabet 命令体按**名字引用自身**，
+% 覆盖后报「Math alphabet identifier \mathbf is undefined in math version normal」，
+% 且字形会退成数学斜体（实测）。故另声明独立 alphabet，字体参数照原样取。
+% 实测（本机 ctexbook + XeLaTeX）：\mathbf=TU/lmr/b/n、\mathsf=TU/lmss/m/n、
+% \mathrm=TU/lmr/m/n、\mathbb=U/msb/m/n、\mathscr=U/rsfs/m/n。
+\DeclareMathAlphabet{\yukina@uprightbf}{\encodingdefault}{\rmdefault}{\bfdefault}{n}
+\DeclareMathAlphabet{\yukina@uprightsf}{\encodingdefault}{\sfdefault}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightrm}{\encodingdefault}{\rmdefault}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightbb}{U}{msb}{m}{n}
+\DeclareMathAlphabet{\yukina@uprightscr}{U}{rsfs}{m}{n}
+\protected\def\mathbf#1{\yukina@uprightbf{#1}\yukina@uprightpeek}
+\protected\def\mathsf#1{\yukina@uprightsf{#1}\yukina@uprightpeek}
+\protected\def\mathrm#1{\yukina@uprightrm{#1}\yukina@uprightpeek}
+\protected\def\mathbb#1{\yukina@uprightbb{#1}\yukina@uprightpeek}
+\protected\def\mathscr#1{\yukina@uprightscr{#1}\yukina@uprightpeek}
+
+
+% ================================================================
+% [模块 III] 章节标题与页眉页脚
+% ================================================================
+
+% -------- 3.1 Section / Subsection / Subsubsection 标题 (titlesec) --------
+% article 类无 chapter，最高层级为 section。三级标题统一用 titlesec 定制：
+% section 用 \Large、subsection 用 \large、subsubsection 用 \normalsize，
+% 均加粗、左对齐，使层级清晰。
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries\raggedright}{\thesection}{1em}{}
+\titlespacing{\section}{0pt}{*3.5}{*1.5}
+\titleformat{\subsection}{\normalfont\large\bfseries\raggedright}{\thesubsection}{1em}{}
+\titlespacing{\subsection}{0pt}{*3.25}{*1.25}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\raggedright}{\thesubsubsection}{1em}{}
+\titlespacing{\subsubsection}{0pt}{*3.25}{*1.25}
+
+% -------- 3.2 页眉页脚 (fancyhdr) --------
+% 页面风格：页码居中于页脚底部，无页眉横线。
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}                       % 清除所有默认设置
+\fancyfoot[C]{\thepage}          % 页码置于底部中间
+\renewcommand{\headrulewidth}{0pt}  % 去掉页眉横线
+
+
+% ================================================================
+% [模块 IV] 定理与证明环境 (tcolorbox)
+% ================================================================
+\usepackage[most]{tcolorbox}     % tcolorbox 全功能加载
+
+% -------- 4.1 旧环境清理 --------
+% 将可能与 tcolorbox 重名的环境先重置，避免与已有宏包定义冲突。
+\let\comment\relax
+\let\endcomment\relax
+\let\problem\relax
+\let\answer\relax
+\let\hint\relax
+\let\endhint\relax
+\let\sketch\relax
+\let\proof\relax
+\let\endproof\relax
+\let\algorithm\relax
+\let\endalgorithm\relax
+\let\code\relax
+\let\endcode\relax
+\let\convention\relax
+\let\endconvention\relax
+\let\alarm\relax
+\let\endalarm\relax
+
+% -------- 4.2 颜色体系 --------
+% 高区分度学术配色：每种环境一个主色，用于标题与顶边线；
+% 盒子背景使用对应颜色的浅色混合（如 mainblue!6!white）。
+\definecolor{mainblue}{RGB}{25, 95, 170}       % 蓝：定义
+\definecolor{mainindigo}{RGB}{65, 75, 160}     % 靛蓝：公理/元定理
+\definecolor{mainteal}{RGB}{0, 125, 140}       % 青：假设/问题
+\definecolor{mainred}{RGB}{180, 45, 55}        % 红：定理/警告
+\definecolor{mainorange}{RGB}{210, 100, 25}    % 橙：引理/算法
+\definecolor{mainpurple}{RGB}{115, 70, 155}    % 紫：命题/分析
+\definecolor{maingreen}{RGB}{40, 125, 75}      % 绿：推论/例
+\definecolor{mainbrown}{RGB}{145, 90, 45}      % 茶：准则/约定
+\definecolor{mainyellow}{RGB}{195, 135, 0}     % 黄：提示/注意
+\definecolor{mainmagenta}{RGB}{190, 55, 95}    % 品红：习题
+\definecolor{maingray}{RGB}{80, 80, 80}        % 灰：证明/回答/注记/代码
+\definecolor{lightgray}{RGB}{245, 245, 245}    % 浅灰背景
+
+% -------- 4.3 统一计数器 --------
+% 所有定理环境共用 mathcount 计数器，按 section 编号（如 1.1、1.2、...）。
+\newcounter{mathcount}[section]
+\renewcommand{\themathcount}{\thesection.\arabic{mathcount}}
+
+% 习题环境使用独立计数器 exercisecount，同样按 section 编号（如 2.1、2.2、...），
+% 与定理环境（mathcount）互不干扰。
+\newcounter{exercisecount}[section]
+\renewcommand{\theexercisecount}{\thesection.\arabic{exercisecount}}
+
+% -------- 4.4 基础样式 base_thmstyle --------
+% 所有 tcolorbox 环境的公共视觉样式：无框、可跨页、标题黑体无衬线等。
+\tcbset{
+	base_thmstyle/.style={
+		enhanced, breakable, sharp corners, boxrule=0pt, frame hidden,
+		attach title to upper={\par\nopagebreak\smallskip},
+		fonttitle=\bfseries\sffamily,
+		description font=\bfseries\sffamily,
+		separator sign={},
+		label separator={},
+		description delimiters={}{},
+		left=2pt, right=2pt, top=8pt, bottom=5pt,
+		before skip=1.5em, after skip=1.5em,
+	},
+	accent north/.style={borderline north={1.8pt}{0pt}{#1}},
+	accent west/.style={borderline west={1.8pt}{0pt}{#1}}
+}
+
+% -------- 4.5 编号定理环境 (newtcbtheorem) --------
+% 用法：\begin{环境名}{标题}{label} ... \end{环境名}
+% 编号共用 mathcount，可用 \autoref / \cref 引用（label 参数）。
+
+% -- 4.5.1 基础陈述：蓝、靛蓝、青 --
+\newtcbtheorem[use counter=mathcount, number within=section]{definition}{定义}{
+base_thmstyle, label type=definition, colback=mainblue!6!white, accent north=mainblue, coltitle=mainblue }{}
+\newtcbtheorem[use counter from=definition]{axiom}{公理}{
+base_thmstyle, label type=axiom, colback=mainindigo!7!white, accent north=mainindigo, coltitle=mainindigo }{}
+\newtcbtheorem[use counter from=definition]{hypothesis}{假设}{
+base_thmstyle, label type=hypothesis, colback=mainteal!7!white, accent north=mainteal, coltitle=mainteal }{}
+
+% -- 4.5.2 推演结果：每类独立主色，便于快速辨认 --
+\newtcbtheorem[use counter from=definition]{theorem}{定理}{
+base_thmstyle, label type=theorem, colback=mainred!6!white, accent north=mainred, coltitle=mainred }{}
+\newtcbtheorem[use counter from=definition]{lemma}{引理}{
+base_thmstyle, label type=lemma, colback=mainorange!8!white, accent north=mainorange, coltitle=mainorange }{}
+\newtcbtheorem[use counter from=definition]{proposition}{命题}{
+base_thmstyle, label type=proposition, colback=mainpurple!7!white, accent north=mainpurple, coltitle=mainpurple }{}
+\newtcbtheorem[use counter from=definition]{corollary}{推论}{
+base_thmstyle, label type=corollary, colback=maingreen!7!white, accent north=maingreen, coltitle=maingreen }{}
+\newtcbtheorem[use counter from=definition]{metatheorem}{元定理}{
+	base_thmstyle, label type=metatheorem, colback=mainindigo!7!white, accent north=mainindigo, coltitle=mainindigo }{}
+\newtcbtheorem[use counter from=definition]{criteria}{准则}{
+base_thmstyle, label type=criteria, colback=mainbrown!8!white, accent north=mainbrown, coltitle=mainbrown }{}
+
+% -- 4.5.3 补充说明：问题、例、注记 --
+\newtcbtheorem[use counter from=definition]{problem}{问题}{
+base_thmstyle, label type=problem, colback=mainyellow!8!white, accent north=mainyellow, coltitle=mainbrown }{}
+\newtcbtheorem[use counter from=definition]{example}{例}{
+base_thmstyle, label type=example, colback=maingreen!6!white, accent north=maingreen, coltitle=maingreen }{}
+\newtcbtheorem[use counter from=definition]{remark}{注记}{
+base_thmstyle, label type=remark, colback=maingray!6!white, accent north=maingray, coltitle=maingray }{}
+
+% -- 4.5.4 习题：独立编号（exercisecount），品红醒目配色 --
+% 习题环境，编号独立于定理环境（习题 2.1、2.2、...），
+% 品红配色使其在正文中一目了然；解答见 4.6.3 solution 环境。
+\newtcbtheorem[use counter=exercisecount, number within=section]{exercise}{习题}{
+base_thmstyle, label type=exercise, colback=mainmagenta!8!white, accent north=mainmagenta, coltitle=mainmagenta }{}
+
+% -- 4.5.5 其他：算法、约定、警示（均与定理环境共用编号） --
+\newtcbtheorem[use counter from=definition]{algorithm}{算法}{
+base_thmstyle, label type=algorithm, colback=mainorange!8!white, accent north=mainorange, coltitle=mainorange }{}
+\newtcbtheorem[use counter from=definition]{convention}{约定}{
+base_thmstyle, label type=convention, colback=mainbrown!8!white, accent north=mainbrown, coltitle=mainbrown }{}
+\newtcbtheorem[use counter from=definition]{alarm}{警示}{
+base_thmstyle, label type=alarm, colback=mainyellow!16!white, accent north=mainred, coltitle=mainred }{}
+
+% -------- 4.6 证明 / 回答 / 提示 / 代码环境 --------
+
+% -- 4.6.1 证明：灰色顶线，自动加证毕符号（∎） --
+% 证毕符号默认由 after upper 追加。若证明以陈列公式收尾，它落在公式**之后**，
+% 于是另起一行、单独右端 —— 这与 amsthm 的默认行为一致，但排版上更希望贴在末公式行尾。
+% 要贴到同一行，用 \qedhere（与 amsthm 同用法），放在末公式里：
+%     \begin{proof} ... \[ a=b.\qedhere \] \end{proof}
+% 它就地排符号，并把 after upper 的自动符号抑制掉，避免出现两个方框。
+% ⚠️ 不做「自动上移」：那要改写 \[ / equation 的收尾时机，跨宏包组合极易失效。
+% ⚠️ 不能沿用 amsmath 的 \qedhere：它只在 equation/align 系列里真的吐出符号，
+%    放进 \[...\] 里实测什么都不输出（而证明里的陈列公式多数正是 \[...\]）。
+%    故这里改成自己的实现——就地 \hfill 排方框并置标记，after upper 见标记就不再补。
+%    方框用 \ensuremath：调用点本来就在数学模式里，写成 $\square$ 会触发
+%    「Display math should end with $$」。
+\newif\ifyukina@qedplaced
+\renewcommand{\qedhere}{\global\yukina@qedplacedtrue\hfill\ensuremath{\square}}
+% ⚠️ 文章模板差异：本库 base_thmstyle 用了 attach title to upper，而 tcolorbox 把该键
+%    实现为「before upper={...\tcbtitle...}」。若直接写 before upper 重置标记，会**顶掉**
+%    标题附着，证明标题「证明」整行消失（实测：默认样例第 4 页）。故重置改用 before 键
+%    ——它在盒子开始之前执行，不占用 upper 的内容。
+\newtcolorbox{proof}{
+	base_thmstyle,
+	title={证明},
+	coltitle=maingray,
+	accent north=maingray!50,
+	colback=white,
+	before={\global\yukina@qedplacedfalse}, % 每次进入证明重置（breakable 盒子会分包，须全局）
+	after upper={\ifyukina@qedplaced\else\hfill $\square$\fi} % 自动加证明完毕符号
+}
+
+% -- 4.6.2 回答：灰色顶线 --
+\newtcolorbox{answer}{
+	base_thmstyle,
+	title={回答},
+	coltitle=maingray,
+	accent north=maingray!30,
+	colback=white!2!white
+}
+
+% -- 4.6.3 解答：灰色细线，题后即答（习题专用） --
+% 用法：\begin{exercise}{...}{...} 题目 \end{exercise}
+%      紧接 \begin{solution} 解答内容 \end{solution}
+% 无编号、白底、细顶线，视觉轻于定理环境；before skip 较小使其紧贴题目。
+\newtcolorbox{solution}{
+	base_thmstyle,
+	title={解答},
+	coltitle=maingray,
+	accent north=maingray!30,
+	colback=white,
+	before skip=0.6em,
+	after skip=1.5em
+}
+
+% -- 4.6.4 分析：带编号（与定理环境共用计数器） --
+\newtcbtheorem[use counter from=definition]{sketch}{分析}{
+base_thmstyle, label type=sketch, colback=mainpurple!5!white, accent north=mainpurple!70, coltitle=mainpurple }{}
+
+% -- 4.6.5 提示：正文可自然换行、分段和跨页 --
+\newtcolorbox{hint}[1][提示]{
+	base_thmstyle,
+	title={#1},
+	coltitle=mainbrown,
+	colback=mainyellow!10!white,
+	accent west=mainyellow,
+	left=8pt,
+	top=5pt
+}
+
+% -- 4.6.6 代码：可换行、可跨页的代码块；可选参数作为标题 --
+% 用法：\begin{code}[Python 示例] ... \end{code}
+\newtcblisting{code}[1][]{
+	enhanced, breakable, listing only,
+	sharp corners, boxrule=0pt, frame hidden,
+	colback=maingray!6!white,
+	accent west=maingray,
+	title={\ifstrempty{#1}{代码}{代码：#1}},
+	fonttitle=\bfseries\sffamily,
+	coltitle=maingray,
+	left=8pt, right=5pt, top=5pt, bottom=5pt,
+	before skip=1.5em, after skip=1.5em,
+	listing options={
+		basicstyle=\ttfamily\small,
+		breaklines=true,
+		columns=fullflexible,
+		keepspaces=true,
+		showstringspaces=false
+	}
+}
+
+
+% ================================================================
+% [模块 V] 引用与超链接 (hyperref + cleveref)
+% ================================================================
+
+% -------- 5.1 hyperref 设置 --------
+\usepackage{hyperref}
+% PDF 书签（侧边栏）显示章节编号：\numberline 在书签里展开为「编号+空格」
+\pdfstringdefDisableCommands{%
+  \def\numberline#1{#1~}%
+}
+\hypersetup{
+	colorlinks=true,         % 开启链接颜色
+	linkcolor=mainblue,      % 内部链接颜色（目录、公式引用等）
+	citecolor=mainblue,      % 文献引用颜色
+	filecolor=magenta,       % 文件链接颜色
+	urlcolor=mainblue,       % 外部网址颜色
+}
+\renewcommand{\figureautorefname}{图}
+\renewcommand{\tableautorefname}{表}
+
+% -------- 5.2 定理环境引用名称 --------
+% tcolorbox 定理环境的 \autoref 名称（与盒子视觉样式无关）。
+% 所有这类环境共用 mathcount 计数器，hyperref 实际查询的是该计数器名。
+\providecommand{\mathcountautorefname}{定理}
+\providecommand{\definitionautorefname}{定义}
+\providecommand{\axiomautorefname}{公理}
+\providecommand{\hypothesisautorefname}{假设}
+\providecommand{\theoremautorefname}{定理}
+\providecommand{\lemmaautorefname}{引理}
+\providecommand{\propositionautorefname}{命题}
+\providecommand{\corollaryautorefname}{推论}
+\providecommand{\metatheoremautorefname}{元定理}
+\providecommand{\criteriaautorefname}{准则}
+\providecommand{\problemautorefname}{问题}
+\providecommand{\exerciseautorefname}{习题}
+\providecommand{\exampleautorefname}{例}
+\providecommand{\remarkautorefname}{注记}
+\providecommand{\sketchautorefname}{分析}
+\providecommand{\algorithmautorefname}{算法}
+\providecommand{\conventionautorefname}{约定}
+\providecommand{\alarmautorefname}{警示}
+
+% -------- 5.3 cleveref 智能引用 --------
+% nameinlink：链接包含引用名（如「定理 1.1」整体可点击）。
+\usepackage[nameinlink]{cleveref}
+
+% -- 5.3.1 英文引用名（备用） --
+\crefname{definition}{Definition}{Definitions}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{problem}{Problem}{Problems}
+\crefname{exercise}{Exercise}{Exercises}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{convention}{Convention}{Conventions}
+\crefname{alarm}{Alarm}{Alarms}
+
+% -- 5.3.2 中文引用名（默认使用） --
+% tcolorbox 环境共用 mathcount 计数器，其类型信息由 cleveref 写入
+% @cref 标签。令 \autoref 复用 cleveref，确保每种环境显示自己的名称。
+\crefname{definition}{定义}{定义}
+\crefname{axiom}{公理}{公理}
+\crefname{hypothesis}{假设}{假设}
+\crefname{theorem}{定理}{定理}
+\crefname{lemma}{引理}{引理}
+\crefname{proposition}{命题}{命题}
+\crefname{corollary}{推论}{推论}
+\crefname{metatheorem}{元定理}{元定理}
+\crefname{criteria}{准则}{准则}
+\crefname{problem}{问题}{问题}
+\crefname{exercise}{习题}{习题}
+\crefname{example}{例}{例}
+\crefname{remark}{注记}{注记}
+\crefname{sketch}{分析}{分析}
+\crefname{algorithm}{算法}{算法}
+\crefname{convention}{约定}{约定}
+\crefname{alarm}{警示}{警示}
+
+% 与上表同名的首字母大写形式（\Cref）；缺了这段 \Cref 会退回英文名
+\Crefname{definition}{定义}{定义}
+\Crefname{axiom}{公理}{公理}
+\Crefname{hypothesis}{假设}{假设}
+\Crefname{theorem}{定理}{定理}
+\Crefname{lemma}{引理}{引理}
+\Crefname{proposition}{命题}{命题}
+\Crefname{corollary}{推论}{推论}
+\Crefname{metatheorem}{元定理}{元定理}
+\Crefname{criteria}{准则}{准则}
+\Crefname{problem}{问题}{问题}
+\Crefname{exercise}{习题}{习题}
+\Crefname{example}{例}{例}
+\Crefname{remark}{注记}{注记}
+\Crefname{sketch}{分析}{分析}
+\Crefname{algorithm}{算法}{算法}
+\Crefname{convention}{约定}{约定}
+\Crefname{alarm}{警示}{警示}
+
+% -- 5.3.2c 结构层级（节 / 目 / 款）的引用名 --
+% cleveref 只给这些层级内置英文名，中文笔记里 \cref{sec} 会印出「section 1」。
+% 补齐后与正文口径一致：节在正文渲染为「§n」，但引用写成「节 §7」比裸「§7」更清楚，
+% 故名称仍取「节」；目（subsection）对应 Bourbaki 的 no.，款为再下一级。
+% 本模板是 ctexart，无 part/chapter，故只列节及以下三级。
+\crefname{section}{节}{节}
+\crefname{subsection}{目}{目}
+\crefname{subsubsection}{款}{款}
+\Crefname{section}{节}{节}
+\Crefname{subsection}{目}{目}
+\Crefname{subsubsection}{款}{款}
+
+% -- 5.3.3 图、表、公式的中文引用名与标题名 --
+% （ctexart scheme=plain 下默认是英文 Figure/Table，这里统一为中文）
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\crefname{equation}{公式}{公式}
+\Crefname{figure}{图}{图}
+\Crefname{table}{表}{表}
+\Crefname{equation}{公式}{公式}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\renewcommand{\autoref}[1]{\cref{#1}}
+
+% -------- 5.3.4 修补 ctex 与 cleveref 的标签前缀冲突 --------
+% 症状：带 \label 的节/目，第二遍编译报 `Extra \endcsname`，且 .aux 里
+%   \newlabel{<label>@cref}{{[section][1][]1thesection\endcsname }...}
+%   混入「the<级别>\endcsname」，\cref 结果因此不可靠。
+% 根因：ctex 把 \p@<级别> 定义成**接受一个参数**、展开为 \CTEX@the<级别> 的宏
+%   （见 ctex-heading-*.def 的 \CTEX@setcurrentlabel@n）。cleveref 沿用内核写法
+%   \csname p@<级别>\endcsname\csname the<级别>\endcsname，于是前缀宏把紧跟的
+%   \csname 当成参数吃掉，剩下「the<级别>\endcsname」落进标签数据。
+% 修法：把各级前缀宏置空。编号由同一构造里的 \csname the<级别>\endcsname 提供，
+%   \@currentlabel 与 \ref 的显示不变（ctex 另走 \CTEX@setcurrentlabel@n 路径）。
+% 注意：本模板是 ctexart，无 chapter/part，故只处理 section 及以下各级。
+% ⚠️ 不要在这里加 \makeatletter/\makeatother：本文件是 .sty，读入时 @ 已是字母
+%   （catcode 11），\makeatother 会把它复位成 12，令本段之后所有 \@starttoc / \yukina@…
+%   等控制序列解析错位（实测报 `Missing \begin{document}`、`Command \yukina already defined`）。
+\newcommand{\yukina@clear@ctexprefix}[1]{%
+    \@ifundefined{CTEX@the#1}{}{\expandafter\let\csname p@#1\endcsname\@empty}}
+\yukina@clear@ctexprefix{section}
+\yukina@clear@ctexprefix{subsection}
+\yukina@clear@ctexprefix{subsubsection}
+\yukina@clear@ctexprefix{paragraph}
+\yukina@clear@ctexprefix{subparagraph}
+
+% -------- 5.4 多标签引用连接词 --------
+% 默认英文 and，改为中文「和」；连续编号范围用「到」。
+% 注意：cleveref 的连接词命令延迟初始化，须放在 \AtBeginDocument 中重定义；
+% 同类型标签之间用 conjunction，不同类型标签组之间用 groupconjunction，两套都要改。
+\AtBeginDocument{
+    \renewcommand{\crefpairconjunction}{和}
+    \renewcommand{\crefmiddleconjunction}{,}
+    \renewcommand{\creflastconjunction}{和}
+    \renewcommand{\crefrangeconjunction}{到}
+    \renewcommand{\crefpairgroupconjunction}{和}
+    \renewcommand{\crefmiddlegroupconjunction}{,}
+    \renewcommand{\creflastgroupconjunction}{和}
+}
+
+
+% ================================================================
+% [模块 VI] 数学符号定义库
+% ================================================================
+% 常用记号统一预定义，正文中直接使用即可（无需每次写 \operatorname）。
+
+% -------- 6.1 代数 --------
+\newcommand{\N}{\mathbb{N}}              % 自然数集
+\newcommand{\Z}{\mathbb{Z}}              % 整数集
+\newcommand{\Q}{\mathbb{Q}}              % 有理数集
+\newcommand{\R}{\mathbb{R}}              % 实数集
+\newcommand{\C}{\mathbb{C}}              % 复数集
+\newcommand{\K}{\mathbb{K}}              % 域
+\newcommand{\F}{\mathbb{F}}              % 有限域
+\renewcommand{\emptyset}{\varnothing}    % 更美观的空集
+\renewcommand{\Re}{\operatorname{Re}}    % 实部（覆盖内核的花体命令）
+\renewcommand{\Im}{\operatorname{Im}}    % 虚部（覆盖内核的花体命令）
+\renewcommand{\i}{\mathrm{i}}            % 虚数单位（覆盖内核的点 i）
+\newcommand{\fin}{\operatorname{Fin}}    % 有限
+\newcommand{\Coll}{\operatorname{Coll}}  % 集合族/集合汇集
+\newcommand{\FuncRel}{\operatorname{FuncRel}} % 函数关系
+\newcommand{\PFunc}{\operatorname{PFunc}} % 偏函数
+\newcommand{\Eq}{\operatorname{Eq}}      % 等价关系
+\newcommand{\id}{\operatorname{id}}      % 恒等变换
+\newcommand{\rank}{\operatorname{rank}}  % 秩
+\newcommand{\nul}{\operatorname{nul}}    % 零度 (Nullity)
+\newcommand{\Nul}{\operatorname{Nul}}    % 零空间
+\newcommand{\dom}{\operatorname{dom}}    % 定义域
+\newcommand{\im}{\operatorname{im}}      % 像 (Image)
+\newcommand{\coim}{\operatorname{coim}}  % 陪像
+\newcommand{\coker}{\operatorname{coker}}% 陪核
+\newcommand{\tr}{\operatorname{tr}}      % 迹 (Trace)
+\newcommand{\Tr}{\operatorname{Tr}}      % 迹 (大写)
+\newcommand{\diag}{\operatorname{diag}}  % 对角矩阵
+\newcommand{\codim}{\operatorname{codim}}% 余维数
+\newcommand{\row}{\operatorname{row}}    % 行空间
+\newcommand{\col}{\operatorname{col}}    % 列空间
+\newcommand{\Mat}{\operatorname{Mat}}    % 矩阵空间
+\newcommand{\am}{\operatorname{AM}}      % 代数重数
+\newcommand{\gm}{\operatorname{GM}}      % 几何重数
+\newcommand{\Ann}{\operatorname{Ann}}    % 零化子 (Annihilator)
+\newcommand{\Char}{\operatorname{Char}}  % 特征 (Characteristic)
+\newcommand{\Min}{\operatorname{Min}}    % 最小多项式
+\newcommand{\piv}{\operatorname{piv}}    % 主元指数
+\newcommand{\Hom}{\operatorname{Hom}}    % 态射集
+\newcommand{\End}{\operatorname{End}}    % 自同态
+\newcommand{\Aut}{\operatorname{Aut}}    % 自同构
+\newcommand{\Isom}{\operatorname{Isom}}  % 同构
+\newcommand{\lcm}{\operatorname{lcm}}    % 最小公倍数
+\newcommand{\ord}{\operatorname{ord}}    % 阶 (Order)
+\newcommand{\op}{\operatorname{op}}      % 反对偶
+\newcommand{\Frac}{\operatorname{Frac}}  % 分式域
+\newcommand{\tor}{\operatorname{tor}}    % 挠
+\newcommand{\res}{\operatorname{res}}    % 残数/限制
+\newcommand{\rad}{\operatorname{rad}}    % 根
+\newcommand{\sign}{\operatorname{sign}}  % 符号函数
+\newcommand{\sgn}{\operatorname{sgn}}    % 符号函数
+\newcommand{\inv}{\operatorname{inv}}    % 逆/不变
+\newcommand{\ev}{\operatorname{ev}}      % 赋值映射
+\newcommand{\Equ}{\operatorname{Equ}}    % 等价关系类
+\newcommand{\Res}{\operatorname{Res}}    % 结式,限制积
+\newcommand{\Rat}{\operatorname{Rat}}    % 有理性
+\newcommand{\aplus}{\mathbin{\bm{+}}}    % 粗体加号（代数重数等）
+\newcommand{\aminus}{\mathbin{\bm{-}}}   % 粗体减号
+\newcommand{\Der}{\operatorname{Der}}    % 导子
+\newcommand{\Lib}{\operatorname{Lib}}    % 自由对象相关记号
+\newcommand{\Libas}{\operatorname{Libas}}   % 自由代数相关记号
+\newcommand{\Libasc}{\operatorname{Libasc}} % 自由结合代数相关记号
+\newcommand{\Stab}{\operatorname{Stab}}  % 稳定子
+\newcommand{\Fix}{\operatorname{Fix}}    % 不动点集
+\newcommand{\orbit}{\operatorname{orbit}}% 轨道
+\newcommand{\Ind}{\operatorname{Ind}}    % 诱导表示
+\newcommand{\Ad}{\operatorname{Ad}}      % 伴随表示
+\newcommand{\ad}{\operatorname{ad}}      % 伴随
+\newcommand{\Inn}{\operatorname{Inn}}    % 内同构群
+\newcommand{\Int}{\operatorname{Int}}    % 内自同构
+\newcommand{\Grp}{\operatorname{Grp}}    % 群范畴
+\newcommand{\Mo}{\operatorname{Mo}}      % 幺半群相关记号
+\newcommand{\Mag}{\operatorname{Mag}}    % 原群 (magma)
+\newcommand{\Core}{\operatorname{Core}}  % 核心/正规核
+% 数学样式感知的大算子：见下方 ⚠️ 的定位说明，再按 1.5 倍缩放。display/text 与旧版完全一致（宽 7.50002pt），
+% script / scriptscript 依次缩小（实测 6.14584pt / 5.52087pt）。
+% ⚠️ \mathchoice 要放进 \mathop 的参数里，不能放在最外层：放最外层时
+%    \bigast 直接展开成 \mathchoice{…\mathop{…}…}，\limits 失去宿主，
+%    实测 \bigast\limits 报「Limit controls must follow a math operator」
+%    （Algebra 笔记里就有这种写法）；而放进 \vcenter 的 \hbox 又看不到
+%    当前样式（三档恒为 7.50002pt）。折中即下面这种写法。
+\newcommand{\yukina@bigopaux}[2]{%
+    \vcenter{\hbox{\scalebox{1.5}{$#1 #2$}}}}
+\newcommand{\yukina@bigop}[1]{%
+    \mathop{\mathchoice
+        {\yukina@bigopaux{\displaystyle}{#1}}%
+        {\yukina@bigopaux{\textstyle}{#1}}%
+        {\yukina@bigopaux{\scriptstyle}{#1}}%
+        {\yukina@bigopaux{\scriptscriptstyle}{#1}}}\displaylimits}
+\newcommand{\bigast}{\yukina@bigop{\ast}}          % 大星号算子
+\newcommand{\bigtop}{\yukina@bigop{\top}}          % 大 top 算子
+\newcommand{\bigbot}{\yukina@bigop{\bot}}          % 大 bot 算子
+\newcommand{\bigboxplus}{\yukina@bigop{\boxplus}}  % 大盒加算子
+\newcommand{\Shuffle}{\operatorname{Sf}} % shuffle 运算
+\newcommand{\Pol}{\operatorname{Pol}}    % 多项式空间
+\newcommand{\mult}{\operatorname{mult}}  % 重数
+\newcommand{\Ratio}{\operatorname{Ratio}} % 比率/商
+\newcommand{\cont}{\operatorname{cont}}  % 多项式的容度
+\newcommand{\Com}{\operatorname{Com}}    % 交换子
+\newcommand{\Eig}{\operatorname{Eig}}    % 特征空间
+\newcommand{\GEig}{\operatorname{GEig}}  % 广义特征空间
+\newcommand{\Gram}{\operatorname{Gram}}  % Gram 矩阵
+\newcommand{\Sesq}{\operatorname{Sesq}}  % 半双线性形式
+\newcommand{\Tens}{\operatorname{Tens}}  % 交替张量
+\newcommand{\Alt}{\operatorname{Alt}}    % 交替张量
+\newcommand{\Sym}{\operatorname{Sym}}    % 对称张量
+\newcommand{\Bil}{\operatorname{Bil}}    % 双线性形式
+\newcommand{\SymBil}{\operatorname{SymBil}}   % 对称双线性形式
+\newcommand{\AntiBil}{\operatorname{AntiBil}} % 反对称双线性形式
+\newcommand{\Mult}{\operatorname{Mult}}  % 多重映射
+\newcommand{\pr}{\operatorname{pr}}      % 投影 (Projection)
+\newcommand{\adj}{\operatorname{adj}}    % 矩阵的古典伴随
+\newcommand{\cf}{\operatorname{cf}}      % 矩阵的余子式矩阵
+\newcommand{\Norm}{\operatorname{N}}     % 范数/域范数
+\newcommand{\Pc}{\operatorname{Pc}}      % 特征多项式
+\newcommand{\Max}{\operatorname{Max}}      % 最大元集合
+
+% -------- 6.2 几何 --------
+\newcommand{\Vol}{\operatorname{Vol}}    % 体积
+\newcommand{\dr}{\operatorname{dr}}      % 外微分相关
+\newcommand{\OrdB}{\operatorname{OrdB}}  % 有序基
+\newcommand{\Tran}{\operatorname{Tran}}  % 转移矩阵
+\newcommand{\str}{\operatorname{str}}    % 超迹
+\newcommand{\Aff}{\operatorname{Aff}}    % 仿射空间
+\newcommand{\Gr}{\operatorname{Gr}}      % 格拉斯曼流形
+\newcommand{\Pf}{\operatorname{Pf}}      % Pfaffian
+\newcommand{\Sp}{\operatorname{Sp}}      % 辛群
+\newcommand{\SU}{\operatorname{SU}}      % 特殊酉群
+\newcommand{\SO}{\operatorname{SO}}      % 特殊正交群
+\newcommand{\GL}{\operatorname{GL}}      % 一般线性群
+\newcommand{\SL}{\operatorname{SL}}      % 特殊线性群
+\newcommand{\GU}{\operatorname{GU}}      % 相似变换群
+\newcommand{\GSU}{\operatorname{GSU}}    % 特殊相似变换群
+\newcommand{\PGL}{\operatorname{PGL}}    % 一般线性群的投影化
+\newcommand{\ind}{\operatorname{ind}}    % 指数
+\newcommand{\Dir}{\operatorname{Dir}}    % 方向
+\newcommand{\Herm}{\operatorname{Herm}}  % Hermitian 形式
+\newcommand{\SHerm}{\operatorname{SHerm}}% 对称 Hermitian 形式
+\newcommand{\AHerm}{\operatorname{AHerm}}% 反 Hermitian 形式
+\newcommand{\Quad}{\operatorname{Quad}}  % 二次型
+\newcommand{\Disp}{\operatorname{Disp}}  % 位移
+\newcommand{\Sim}{\operatorname{Sim}}    % 相似变换
+\newcommand{\Cl}{\operatorname{Cl}}      % Clifford 代数/闭包
+\newcommand{\Spin}{\operatorname{Spin}}  % Spin 群
+
+% -------- 6.3 分析 --------
+\newcommand{\limit}{\displaystyle\lim}   % 强制使用行间公式样式的极限
+\newcommand{\tg}{\operatorname{tg}}      % 正切函数
+\newcommand{\ctg}{\operatorname{ctg}}    % 余切函数
+\newcommand{\interior}{\operatorname{int}} % 内部
+\newcommand{\exterior}{\operatorname{ext}} % 外部
+\newcommand{\boundary}{\operatorname{bd}}  % 边界
+\newcommand{\closure}{\operatorname{cl}}   % 闭包
+\newcommand{\supp}{\operatorname{supp}}    % 支集
+\newcommand{\disc}{\operatorname{disc}}    % 判别式/离散
+\newcommand{\dd}{\mathop{}\!\mathrm{d}}    % 微分算子（前面自动留细空）
+\newcommand{\tw}{\operatorname{tw}}        % 扭结 (Twist)
+
+
+% ================================================================
+% [模块 VII] 双栏目录
+% ================================================================
+% 目录以双栏排版（标题通栏，内容分两栏），减少目录占用页数。
+% 重定义 \tableofcontents，正文中照常使用即可，无需改动 main.tex。
+
+% -------- 7.1 父标题不与首个子项分栏 --------
+% 双栏目录允许在任意两行之间分栏，于是会出现「§7 某节」卡在第一栏末行、它的第一个目
+% 跑到第二栏首行 —— 父项孤零零吊在栏底，读者还以为那一节没有子项。
+% 做法：记住上一条目录项的层级，若当前项正好是它的直接子级（父→首个子项这一种情形），
+% 就在当前项之前插入 \nobreak（= 惩罚 10000）。它既不能在此处分栏，也使其后的
+% \addvspace 胶水不再构成断点（胶水前面是可丢弃的惩罚项）。同级项之间照常可分栏，
+% 不影响两栏平衡。本模板是 ctexart，无 chapter/part：节 0、目 1、款 2，故节的前驱记为 -1。
+% ⚠️ 只夹紧「节→目」这一层。若把「目→款」也一起夹，连续几级会绑成一条链，一栏装不下时
+%    就顶出一行（书模板上实测：116 条目录让目录页溢出 8.76pt，Overfull \vbox）。
+% ⚠️ 必须等 \l@subsection 定型（article 类 + hyperref 已加载，本段在模块 VII，
+%    即 \begin{document} 之前）之后再包，且用 \let 先抓住现有含义，
+%    否则会丢掉 hyperref 的链接包装。
+\newcount\yukina@toc@prevlevel
+\yukina@toc@prevlevel=-9
+\newcommand{\yukina@toc@guard}[2]{% #1 = 本级， #2 = 父级
+    \ifnum\yukina@toc@prevlevel=#2 \nobreak\fi
+    \global\yukina@toc@prevlevel=#1\relax}
+\let\yukina@toc@section\l@section
+\renewcommand{\l@section}[2]{\yukina@toc@guard{0}{-1}\yukina@toc@section{#1}{#2}}
+\let\yukina@toc@subsection\l@subsection
+\renewcommand{\l@subsection}[2]{\yukina@toc@guard{1}{0}\yukina@toc@subsection{#1}{#2}}
+\let\yukina@toc@subsubsection\l@subsubsection
+\renewcommand{\l@subsubsection}[2]{\yukina@toc@guard{2}{-1}\yukina@toc@subsubsection{#1}{#2}}
+
+\usepackage{multicol}
+\let\oldtableofcontents\tableofcontents
+\renewcommand{\tableofcontents}{%
+  \begingroup
+  \section*{\contentsname}%
+  \phantomsection
+  \addcontentsline{toc}{section}{\contentsname}%
+  \begin{multicols}{2}%
+  \@starttoc{toc}%
+  \end{multicols}%
+  \endgroup
+}
+
+% ================================================================
+% [模块 VIII] 无编号但进目录的标题
+% ================================================================
+% 前言、导引、小结这类标题要三件事一起做：星号标题 + 独立锚点 + 写目录项。
+% 三件套散着写有两处常错：
+%   ① 漏 \phantomsection —— 目录项复用上一个锚点，点击跳到别处；
+%   ② 星号标题不记标题名 —— \newlabel 第三字段空着，\nameref 印不出东西。
+% 收口成一个宏：\unnumberedsection{<级别>}{<标题>}，级别取 section / subsection / subsubsection。
+% 本文件是 .sty，读入时 @ 已是字母，无需 \makeatletter。
+% ⚠️ 星号标题既不步进也不重置下级计数器：小结下面若还挂带编号的下级标题，
+%    会接着上一层的号继续排（出现「2 小结内容」这种孤立编号）。故小结的条目同样用本宏。
+\newcommand{\unnumberedsection}[2]{%
+    \csname #1\endcsname*{#2}%
+    \phantomsection
+    \protected@edef\@currentlabelname{#2}%
+    \addcontentsline{toc}{#1}{#2}}

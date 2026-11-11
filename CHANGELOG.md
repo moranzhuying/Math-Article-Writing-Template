@@ -1,0 +1,122 @@
+# 更新日志 (ChangeLog)
+
+**版本日期**: 2026-10-18
+**上一版日期**: 2026-10-17
+**当前状态**: 模板初始版本，持续完善中
+
+---
+
+## 2026-10-18 更新概览
+
+纠正小节级导引与小结的编排，并把「无编号但进目录」的写法收口为宏。
+
+### 缺陷修复
+
+* **导引被塞进小结**
+    * `Summary/` 目录下的 `intro.tex` 让「导引」印在小结内部，小节目录反而没有导引。
+      改为导引置于本节最前（`\subsection` 之后、第一个段之前），小结置于最后，`Summary/` 只留小结内容。
+* **小结占据正文编号**
+    * `\subsection{本节小结}` / `\subsubsection{本小节小结}` 会占掉正文编号。改为无编号，但目录项保留。
+
+### 优化与改进
+
+* **`\unnumberedsection` 的定义位置**
+    * 由模块 III 的 3.1.1 移到模块 VIII，与其余十份 `structure.sty` 副本位置一致，日后改宏不会漏本。
+* **补注「星号标题不重置计数器」**
+    * 宏注释里写明：小结下面若还挂带编号的下级标题，会接着上一层的号继续排；小结条目也必须走本宏。
+* **小节级导引**
+    * 每个小节目录新增 `intro.tex`，写作 `\unnumberedsection{subsubsection}{本小节导引}`。
+* **README 结构说明**
+    * 目录树与「导引与小结分处两端」一段改为新结构，指明统一调用 `\unnumberedsection`。
+
+---
+
+## 2026-10-17 更新概览
+
+按四套模板的联合排版审查结论修复缺陷，并落实排版政策。
+
+### 缺陷修复
+
+* **节 / 目的智能引用（cleveref）**
+    * 修掉第二遍编译报 `Extra \endcsname`、`.aux` 里 `@cref` 混入 `the<级别>\endcsname` 的问题。
+      根因是 ctex 的 `\p@<级别>` 与 cleveref 的内核写法冲突；改为把各级前缀宏置空。
+* **目录项的链接目标**
+    * 前言、术语对照表与三个测试附录的无编号标题补 `\phantomsection`，此前它们复用
+      Contents 或正文小结的旧锚点，点击会跳错位置。
+* **参考文献的目录登记位置**
+    * `\addcontentsline` 从 `\end{thebibliography}` 之后移到标题所在处，并补 `\phantomsection`。
+      此前登记的是环境末尾的页码，还继承 `equation.*` 旧锚点（跨页压力样例里标题在第 8 页、
+      目录却记第 10 页）。
+* **证毕符号可贴末公式同行**
+    * 新增 `\qedhere`；重置标记用 `before` 键——本库 `base_thmstyle` 用了 `attach title to upper`，
+      写 `before upper` 会让「证明」标题整行消失。
+* **双栏目录：父标题与首个子项不分栏**
+    * 节与其第一个目之间插入 `\nobreak`。
+
+### 优化与改进
+
+* **结构层级引用名改为中文**
+    * 补 `\crefname` / `\Crefname`：节、目、款。此前 `\cref{sec}` 会印出英文 `section`。
+
+### 优化与改进
+
+* **大算子跟随数学样式缩小**
+    * `\bigast` / `\bigtop` / `\bigbot` / `\bigboxplus` 改用 `\mathop{\mathchoice…}` 实现：
+      展示与正文样式下与旧版一致（实测宽 7.50002pt），上下标里依次缩小（6.14584pt / 5.52087pt）。
+      `\mathchoice` 放在 `\mathop` 的参数里而非最外层——放最外层会让 `\bigast\limits` 报
+      「Limit controls must follow a math operator」。
+* **撇号与前字符的间距**
+    * 重定义字符 `'` 与 `\prime`，在撇号前插入 `\primeKern`（默认 1mu），使 `\mathbf{f}'` 这类
+      直立字体族的撇号间距与斜体一致；上下标中按字号自动缩小。
+
+
+## 2026-10-10 更新概览
+
+统一文档命名：更新日志由 `ChangeLog.md` 改名为 `CHANGELOG.md`，`README.md` 内的引用同步。
+
+### 优化与改进
+
+* **文档命名统一**
+    * `ChangeLog.md` → `CHANGELOG.md`，与家族其他模板一致。
+    * `README.md` 内对该文件的引用同步更新。
+
+## 2026-10-06 更新概览
+
+同步 ctexbook 版（笔记写作）的两项改动：补齐 `\Cref` 系列的中文引用名、调整常用记号；`README.md` 的定理环境清单改用英文环境名，并补入面向外部素材改写的要点。
+
+### 优化与改进
+
+* **补齐 `\Crefname`（首字母大写引用名）**
+    * 17 个定理类环境补上 `\Crefname`。此前只有小写形式 `\crefname`，`\Cref{标签}` 会退回英文名（如 `Theorem`）。
+* **新增与调整记号**
+    * `\Re`、`\Im` 改为直立算子（`\operatorname`），覆盖内核默认的花体 ℜ / ℑ。
+    * 新增 `\i`（虚数单位，正体）与 `\dd`（微分算子，前面自动留细空）。
+* **`README.md`**
+    * 定理环境清单改用**英文环境名**（`definition`、`axiom` …），与环境实际名称一致。
+    * 在「定理环境体系」「智能引用」「交换图支持」三节补入面向外部素材改写的要点：环境类型服从论证角色、假设与结论的区分不遗落、并列显示公式合并进 `align` 系环境、有序列举一律用 `enumerate`、箭头—节点型数学图用 `tikz-cd` 重排、标签唯一且引用不硬编码编号。
+
+---
+
+## 2026-09-02 更新概览
+
+首个版本：由 ctexbook 模板（笔记写作）迁移为 ctexart 模板，面向单篇文章、讲义与短文写作。
+
+### 新增功能
+
+* **ctexart 文档骨架**
+    * 主文件 `main.tex`、核心样式包 `structure.sty`、交换图包 `quiver.sty`。
+    * 无 `\chapter` / `\part` / `\frontmatter`，最高层级为 `\section`。
+* **三级嵌套结构（整体下移一级）**
+    * 章 → 节、节 → 小节、小节 → 段（subsubsection），每层 `index.tex` 汇总。
+    * 每节含 `intro.tex`（本节导引）、`Summary/`（本节小结），每小节可带 `Summary/`（本小节小结）与节内附录 `Appendix_Name/`。
+* **习题/解答环境（保留，无独立习题集）**
+    * `exercise`（品红，独立编号 `exercisecount`）与 `solution`（灰色，题后即答）环境保留，正文内嵌使用。
+* **脚本工具**
+    * `commit.py` / `commit.sh` 一键提交、`update_cwl.py` 补全同步脚本。
+
+### 相对 ctexbook 版的调整
+
+* 定理/习题计数器由 `chapter` 改挂 `section`，编号仍为「1.1」形式。
+* 显式设置 `secnumdepth=3`、`tocdepth=3`，使第三级（subsubsection）带编号并进入目录。
+* 移除 `\noteref` 跨文档引用宏与 `setup_mode.py` 模式切换脚本（不设独立习题集）。
+* 三级标题改用 titlesec 统一定制（`\Large` / `\large` / `\normalsize`）。
