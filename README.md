@@ -41,7 +41,7 @@
 | 推演结论 | `theorem`（红）、`lemma`（橙）、`proposition`（紫）、`corollary`（绿）、`metatheorem`（靛蓝）、`criteria`（茶） |
 | 补充说明 | `problem`（黄）、`example`（绿）、`remark`（灰）                                                                |
 | 习题     | `exercise`（品红，独立编号）、`solution`（灰，题后即答）                                                        |
-| 其他     | `algorithm`、`convention`、`alarm`、`proof`（灰底，不排 ∎）、`answer`（青底）、`sketch`、`hint`、代码块                     |
+| 其他     | `algorithm`、`convention`、`alarm`、`proof`（石板蓝灰底，不排 ∎）、`answer`（青底）、`sketch`、`hint`、代码块                     |
 
 每个环境带独立学术配色与顶边色条，视觉统一且易于区分。
 

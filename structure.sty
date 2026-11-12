@@ -206,8 +206,9 @@
 \definecolor{mainbrown}{RGB}{145, 90, 45}      % 茶：准则/约定
 \definecolor{mainyellow}{RGB}{195, 135, 0}     % 黄：提示/注意
 \definecolor{mainmagenta}{RGB}{190, 55, 95}    % 品红：习题
-\definecolor{maingray}{RGB}{80, 80, 80}        % 灰：证明/回答/注记/代码
+\definecolor{maingray}{RGB}{80, 80, 80}        % 灰：注记/代码
 \definecolor{lightgray}{RGB}{245, 245, 245}    % 浅灰背景
+\definecolor{mainproof}{RGB}{80, 98, 122}      % 石板蓝灰：证明（与注记的纯灰区分）
 
 % -------- 4.3 统一计数器 --------
 % 所有定理环境共用 mathcount 计数器，按 section 编号（如 1.1、1.2、...）。
@@ -287,9 +288,11 @@ base_thmstyle, label type=alarm, colback=mainyellow!16!white, accent north=mainr
 
 % -------- 4.6 证明 / 回答 / 提示 / 代码环境 --------
 
-% -- 4.6.1 证明：灰色底纹 + 灰色顶线（已移除证毕符号）--
-% 证明几乎每节都有，底纹只作分区提示，故取 maingray!6 这种淡到不抢字的灰；
-% 与 answer 的青色底纹分开，一眼能辨「这是证明」「那是答话」。
+% -- 4.6.1 证明：石板蓝灰底纹（已移除证毕符号）--
+% ⚠️ 早先用 maingray!6 作底纹，与「注记」的灰底完全同色（实测都是 244,244,244），
+%    两者上下相邻时分不清，故改为 mainproof!14（石板蓝灰 80/98/122）：
+%    比注记深 13 级、色相偏冷，一眼认得出「这是证明」；同时它几乎无彩，
+%    不与十六类彩色定理盒子的色相打架（换色时先比过注记的灰与定义的蓝）。
 % ⚠️ 证毕符号（∎）已按需求移除，原先由 after upper 自动追加。
 %    要恢复，把 after upper={\hfill$\square$} 加回盒子里即可。
 % ⚠️ \qedhere 保留为空宏：旧稿若在末公式里写了 \qedhere 不至于报错，只是不再排符号。
@@ -299,8 +302,8 @@ base_thmstyle, label type=alarm, colback=mainyellow!16!white, accent north=mainr
 	base_thmstyle,
 	title={证明},
 	coltitle=maingray,
-	accent north=maingray!50,
-	colback=maingray!6!white
+	accent north=mainproof!85,
+	colback=mainproof!14!white
 }
 
 % -- 4.6.2 回答：青色底纹 + 青色顶线（与证明的灰底区分）--
