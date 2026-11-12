@@ -287,41 +287,31 @@ base_thmstyle, label type=alarm, colback=mainyellow!16!white, accent north=mainr
 
 % -------- 4.6 证明 / 回答 / 提示 / 代码环境 --------
 
-% -- 4.6.1 证明：灰色顶线，自动加证毕符号（∎） --
-% 证毕符号默认由 after upper 追加。若证明以陈列公式收尾，它落在公式**之后**，
-% 于是另起一行、单独右端 —— 这与 amsthm 的默认行为一致，但排版上更希望贴在末公式行尾。
-% 要贴到同一行，用 \qedhere（与 amsthm 同用法），放在末公式里：
-%     \begin{proof} ... \[ a=b.\qedhere \] \end{proof}
-% 它就地排符号，并把 after upper 的自动符号抑制掉，避免出现两个方框。
-% ⚠️ 不做「自动上移」：那要改写 \[ / equation 的收尾时机，跨宏包组合极易失效。
-% ⚠️ 不能沿用 amsmath 的 \qedhere：它只在 equation/align 系列里真的吐出符号，
-%    放进 \[...\] 里实测什么都不输出（而证明里的陈列公式多数正是 \[...\]）。
-%    故这里改成自己的实现——就地 \hfill 排方框并置标记，after upper 见标记就不再补。
-%    方框用 \ensuremath：调用点本来就在数学模式里，写成 $\square$ 会触发
-%    「Display math should end with $$」。
-\newif\ifyukina@qedplaced
-\renewcommand{\qedhere}{\global\yukina@qedplacedtrue\hfill\ensuremath{\square}}
-% ⚠️ 文章模板差异：本库 base_thmstyle 用了 attach title to upper，而 tcolorbox 把该键
-%    实现为「before upper={...\tcbtitle...}」。若直接写 before upper 重置标记，会**顶掉**
-%    标题附着，证明标题「证明」整行消失（实测：默认样例第 4 页）。故重置改用 before 键
-%    ——它在盒子开始之前执行，不占用 upper 的内容。
+% -- 4.6.1 证明：灰色底纹 + 灰色顶线（已移除证毕符号）--
+% 证明几乎每节都有，底纹只作分区提示，故取 maingray!6 这种淡到不抢字的灰；
+% 与 answer 的青色底纹分开，一眼能辨「这是证明」「那是答话」。
+% ⚠️ 证毕符号（∎）已按需求移除，原先由 after upper 自动追加。
+%    要恢复，把 after upper={\hfill$\square$} 加回盒子里即可。
+% ⚠️ \qedhere 保留为空宏：旧稿若在末公式里写了 \qedhere 不至于报错，只是不再排符号。
+%    不能直接还给 amsmath 的原版 —— 它放进 \[...\] 会报「Display math should end with $$」。
+\renewcommand{\qedhere}{}
 \newtcolorbox{proof}{
 	base_thmstyle,
 	title={证明},
 	coltitle=maingray,
 	accent north=maingray!50,
-	colback=white,
-	before={\global\yukina@qedplacedfalse}, % 每次进入证明重置（breakable 盒子会分包，须全局）
-	after upper={\ifyukina@qedplaced\else\hfill $\square$\fi} % 自动加证明完毕符号
+	colback=maingray!6!white
 }
 
-% -- 4.6.2 回答：灰色顶线 --
+% -- 4.6.2 回答：青色底纹 + 青色顶线（与证明的灰底区分）--
+% 回答应「问题」而来，用青（mainteal）系；与证明的灰、定理的红、例的绿、
+% 习题的品红都拉开距离，扫一眼就能分出盒子类型。
 \newtcolorbox{answer}{
 	base_thmstyle,
 	title={回答},
-	coltitle=maingray,
-	accent north=maingray!30,
-	colback=white!2!white
+	coltitle=mainteal,
+	accent north=mainteal!40,
+	colback=mainteal!6!white
 }
 
 % -- 4.6.3 解答：灰色细线，题后即答（习题专用） --
